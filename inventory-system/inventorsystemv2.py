@@ -9,6 +9,7 @@ stocksCaseValues = ["24", "41"]
 stocksPieceValues = ["11", "5"]
 stocksPiecePerCase = ["12", "6"]
 agentNames = ["OMAR", "DENNIS", "RIGOR", "JOSHUA", "KENNETH"]
+mLHistoryList = []
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -74,10 +75,15 @@ class MainWindow(QMainWindow):
         #Defining elements of row 1
         #stocksLabel = QLabel("Stocks")
         currentItemHeader = QLabel("DESCRIPTION")
+        font = QFont("SansSerif", 10, QFont.Medium)
         self.currentItemLabel = QLabel(self.descriptionComboBox.currentText())
         stocksCaseLabel = QLabel("CASE")
         stocksPieceLabel = QLabel("PIECE")
         stocksPiecePerCaseLabel = QLabel("Piece per Case")
+        currentItemHeader.setFont(font)
+        stocksCaseLabel.setFont(font)
+        stocksPieceLabel.setFont(font)
+        stocksPiecePerCaseLabel.setFont(font)
 
         #Adding elements to row 2 of stocks
         
@@ -116,7 +122,7 @@ class MainWindow(QMainWindow):
 
         claimedItemsLabel = QLabel("Claimed Items")
         totalLabel = QLabel("Total")
-        self.claimIndex = 6
+        self.claimIndex = 1
         self.currentAgent = QLabel(self.agentComboBox.currentText())
 
         self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
@@ -127,7 +133,6 @@ class MainWindow(QMainWindow):
         pieceInputHBox = QHBoxLayout()
         pieceInputHBox.addWidget(self.pieceInputLabel)
         pieceInputHBox.addWidget(self.pieceInput)
-        align_top = Qt.AlignmentFlag.AlignTop
         self.morningLoadVbox.addWidget(morningLoadLabel)
         self.morningLoadVbox.addLayout(chooseAgentBox)
         
@@ -182,7 +187,26 @@ class MainWindow(QMainWindow):
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_4)
         button_layout.addWidget(btn)
-        self.stacklayout.addWidget(Color("blue"))
+
+        #morning load history window
+        mLHistoryContainer = QWidget()
+        mLHistoryLayout = QVBoxLayout(mLHistoryContainer)
+        columnTitles = ["Agent", "Description", "Case", "Piece"]
+        mLHistoryLabel = QLabel("MORNING LOAD HISTORY")
+        font = QFont("SansSerif", 15, QFont.Bold)
+        mLHistoryLabel.setFont(font)
+        mLHistoryLayout.addWidget(mLHistoryLabel)
+        self.mLHistoryGrid = QGridLayout()
+        for t in range(len(columnTitles)):
+            font = QFont("SansSerif", 10, QFont.Medium)
+            titleLabel = QLabel(columnTitles[t])
+            titleLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            titleLabel.setFont(font)
+            self.mLHistoryGrid.addWidget(titleLabel, 0, t)
+        mLHistoryLayout.addLayout(self.mLHistoryGrid)
+        self.stacklayout.addWidget(mLHistoryContainer)
+
+
 
         btn_icon = qta.icon('fa5s.clock')
         btn = QPushButton(btn_icon, "Backload History")
@@ -255,27 +279,27 @@ class MainWindow(QMainWindow):
         caseLabel = QLabel(str(int(self.caseInput.value())))
         pieceLabel = QLabel(str(int(self.pieceInput.value())))
         descriptionLabel = QLabel(self.descriptionComboBox.currentText())
-        #FIX, Problem with this, what if the user switches items.
-        #create Vlayouts per column of the table that is rendered everytime the stocks are updated
-        #create renderClaimedTable(self)
-        #claimedColumn1 = QVBoxLayout()
-        #claimedColumn2 = QVBoxLayout()
-        #claimedColumn3 = QVBoxLayout()
-        #self.morningLoad.addWidget(claimedColumn1, 6, 0)
-        #self.morningLoad.addWidget(claimedColumn2, 6, 2)
-        #self.morningLoad.addWidget(claimedColumn3, 6, 1)
-
-        self.morningLoadLayout.addWidget(agentLabel, index, 0)
-        self.morningLoadLayout.addWidget(caseLabel, index, 1)
-        self.morningLoadLayout.addWidget(pieceLabel, index, 2)
-        self.morningLoadLayout.addWidget(descriptionLabel, index, 3)
+        font = QFont("SansSerif", 10, QFont.Normal)
+        agentLabel.setFont(font)
+        caseLabel.setFont(font)
+        pieceLabel.setFont(font)
+        descriptionLabel.setFont(font)
+        self.mLHistoryGrid.addWidget(agentLabel, index, 0)
+        self.mLHistoryGrid.addWidget(descriptionLabel, index, 1)
+        self.mLHistoryGrid.addWidget(caseLabel, index, 2)
+        self.mLHistoryGrid.addWidget(pieceLabel, index, 3)
         self.claimIndex += 1
-
+        mLHistoryList.append([self.currentAgent.text(), str(int(self.caseInput.value())), str(int(self.pieceInput.value())), self.descriptionComboBox.currentText()])
+        print(mLHistoryList)
         self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
         if int(self.stocksCaseCurrent.text()) > 0:
             self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()) - 1)
         else:
             self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
+
+        #set values back to 0 after loading
+        self.caseInput.setValue(0)
+        self.pieceInput.setValue(0)
 
     def agent_changed(self, name):
         self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
