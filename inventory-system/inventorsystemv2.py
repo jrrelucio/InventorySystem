@@ -44,30 +44,44 @@ class MainWindow(QMainWindow):
         
         ###START OF MORNING LOAD WINDOW
         morningLoadContainer = QWidget()
-        self.morningLoadLayout = QGridLayout(morningLoadContainer)
+        self.morningLoadVbox = QVBoxLayout(morningLoadContainer)
         morningLoadLabel = QLabel("MORNING LOAD")
+        font = QFont("SansSerif", 15, QFont.Bold)
+        morningLoadLabel.setFont(font)
+        font = QFont("SansSerif", 10, QFont.DemiBold)
+        chooseAgentBox = QHBoxLayout()
         agentLabel = QLabel("CHOOSE AGENT")
-        agentComboBox = QComboBox()
-        agentComboBox.addItems(agentNames)
-        agentComboBox.currentTextChanged.connect( self.agent_changed )
+        agentLabel.setFont(font)
+        self.agentComboBox = QComboBox()
+        self.agentComboBox.addItems(agentNames)
+        self.agentComboBox.currentTextChanged.connect( self.agent_changed )
+        chooseAgentBox.addWidget(agentLabel)
+        chooseAgentBox.addWidget(self.agentComboBox)
 
         #Defining elements of Description column
-        descriptionLabel = QLabel("CHOOSE ITEM")
+        chooseItemBox = QHBoxLayout()
+        chooseItemLabel = QLabel("CHOOSE ITEM")
+        chooseItemLabel.setFont(font)
         self.descriptionComboBox = QComboBox()
         self.descriptionComboBox.addItems(["ALFONSO 50cl", "ALFONSO 70cl"])
         self.descriptionComboBox.currentIndexChanged.connect( self.index_changed )
         itemIndex = self.descriptionComboBox.currentIndex()
         #self.descriptionComboBox.setEditable(True)
         self.descriptionComboBox.setInsertPolicy(QComboBox.InsertPolicy.InsertAlphabetically)
+        chooseItemBox.addWidget(chooseItemLabel)
+        chooseItemBox.addWidget(self.descriptionComboBox)
         
         #Defining elements of row 1
         #stocksLabel = QLabel("Stocks")
-        stocksCaseLabel = QLabel("Case")
-        stocksPieceLabel = QLabel("Piece")
+        currentItemHeader = QLabel("DESCRIPTION")
+        self.currentItemLabel = QLabel(self.descriptionComboBox.currentText())
+        stocksCaseLabel = QLabel("CASE")
+        stocksPieceLabel = QLabel("PIECE")
         stocksPiecePerCaseLabel = QLabel("Piece per Case")
 
         #Adding elements to row 2 of stocks
         
+        self.descriptonCurrent = QLabel()
         self.stocksCaseCurrent = QLabel(stocksCaseValues[itemIndex])
         self.stocksPieceCurrent = QLabel(stocksPieceValues[itemIndex])
         self.stocksPiecePerCaseCurrent = QLabel(stocksPiecePerCase[itemIndex])
@@ -103,37 +117,48 @@ class MainWindow(QMainWindow):
         claimedItemsLabel = QLabel("Claimed Items")
         totalLabel = QLabel("Total")
         self.claimIndex = 6
-        
-        self.currentAgent = QLabel(agentComboBox.currentText())
+        self.currentAgent = QLabel(self.agentComboBox.currentText())
 
-
+        self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel = QLabel("How many piece of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        caseInputHBox = QHBoxLayout()
+        caseInputHBox.addWidget(self.caseInputLabel)
+        caseInputHBox.addWidget(self.caseInput)
+        pieceInputHBox = QHBoxLayout()
+        pieceInputHBox.addWidget(self.pieceInputLabel)
+        pieceInputHBox.addWidget(self.pieceInput)
         align_top = Qt.AlignmentFlag.AlignTop
-        self.morningLoadLayout.addWidget(morningLoadLabel, 0,0, align_top)
-        self.morningLoadLayout.addWidget(agentLabel, 0,1, align_top)
-        self.morningLoadLayout.addWidget(agentComboBox, 0,2, align_top)
+        self.morningLoadVbox.addWidget(morningLoadLabel)
+        self.morningLoadVbox.addLayout(chooseAgentBox)
         
 
-        self.currentAgent = QLabel(agentComboBox.currentText())
+        self.currentAgent = QLabel(self.agentComboBox.currentText())
         #adding items to main grid
-        self.morningLoadLayout.addWidget(self.currentAgent, 1, 0)
-        self.morningLoadLayout.addWidget(descriptionLabel, 2, 0)
-        #self.morningLoad.addWidget(stocksLabel, 0, 1)
-        self.morningLoadLayout.addWidget(stocksCaseLabel, 2, 1)
-        self.morningLoadLayout.addWidget(stocksPieceLabel, 2, 2)
-        self.morningLoadLayout.addWidget(stocksPiecePerCaseLabel, 2, 3)
-        self.morningLoadLayout.addWidget(self.descriptionComboBox, 3, 0)
-        self.morningLoadLayout.addWidget(self.stocksCaseCurrent, 3, 1)  
-        self.morningLoadLayout.addWidget(self.stocksPieceCurrent, 3, 2)
-        self.morningLoadLayout.addWidget(self.stocksPiecePerCaseCurrent, 3, 3)
+        self.morningLoadVbox.addLayout(chooseItemBox)
+        self.morningLoadLayout = QGridLayout()
+        self.morningLoadLayout.addWidget(currentItemHeader, 0, 0)
+        self.morningLoadLayout.addWidget(stocksCaseLabel, 0, 1)
+        self.morningLoadLayout.addWidget(stocksCaseLabel, 0, 1)
+        self.morningLoadLayout.addWidget(stocksPieceLabel, 0, 2)
+        self.morningLoadLayout.addWidget(stocksPiecePerCaseLabel, 0, 3)
+        self.morningLoadLayout.addWidget(self.currentItemLabel, 1, 0)
+        self.morningLoadLayout.addWidget(self.stocksCaseCurrent, 1, 1)  
+        self.morningLoadLayout.addWidget(self.stocksPieceCurrent, 1, 2)
+        self.morningLoadLayout.addWidget(self.stocksPiecePerCaseCurrent, 1, 3)
         #self.morningLoad.addWidget(self.agentName, 3, 0)
-        self.morningLoadLayout.addWidget(self.caseInput, 4, 1)
-        self.morningLoadLayout.addWidget(self.pieceInput, 4, 2)
-        self.morningLoadLayout.addWidget(self.loadBtn, 4, 3)
-        self.morningLoadLayout.addWidget(claimedItemsLabel, 5, 0)
-        self.morningLoadLayout.addWidget(claimedAgentLabel, 6, 0)
-        self.morningLoadLayout.addWidget(claimedCaseLabel, 6, 1)
-        self.morningLoadLayout.addWidget(claimedPieceLabel, 6, 2)
-        self.morningLoadLayout.addWidget(claimedDescriptionLabel, 6, 3)
+        self.morningLoadVbox.addLayout(self.morningLoadLayout)
+        self.morningLoadVbox.addLayout(caseInputHBox)
+        self.morningLoadVbox.addLayout(pieceInputHBox)
+        self.morningLoadVbox.addWidget(self.loadBtn)
+        
+
+        """""""""
+        self.morningLoadLayout.addWidget(claimedItemsLabel, 6, 0)
+        self.morningLoadLayout.addWidget(claimedAgentLabel, 7, 0)
+        self.morningLoadLayout.addWidget(claimedCaseLabel, 7, 1)
+        self.morningLoadLayout.addWidget(claimedPieceLabel, 7, 2)
+        self.morningLoadLayout.addWidget(claimedDescriptionLabel, 7, 3)
+        """""""""
 
         self.stacklayout.addWidget(morningLoadContainer)
 
@@ -189,6 +214,9 @@ class MainWindow(QMainWindow):
         self.stacklayout.setCurrentIndex(4)
 
     def index_changed(self, index):
+        self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel.setText("How many pieces of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.currentItemLabel.setText(self.descriptionComboBox.currentText())
         self.stocksCaseCurrent.setText(stocksCaseValues[index])
         self.stocksPieceCurrent.setText(stocksPieceValues[index])
         self.stocksPiecePerCaseCurrent.setText(stocksPiecePerCase[index])
@@ -250,6 +278,8 @@ class MainWindow(QMainWindow):
             self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
 
     def agent_changed(self, name):
+        self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel.setText("How many pieces of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
         self.currentAgent.setText(name)
 
     
