@@ -4,12 +4,18 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayo
 from PyQt6.QtGui import QPalette, QColor, QPixmap, QFont
 from layout_colorwidget import Color
 import qtawesome as qta
+import pandas as pd
+import inventoryread as ir
+df = pd.read_excel(r'C:\Users\Joshua\Desktop\Inventory System\InventorySystem\inventory-system\current_stocks.xlsx')
 
-stocksCaseValues = ["24", "41"]
-stocksPieceValues = ["11", "5"]
-stocksPiecePerCase = ["12", "6"]
+stocksCaseValues = [str(x) for x in ir.get_all_case_values(df)]
+stocksPieceValues = [str(x) for x in ir.get_all_piece_values(df)]
+stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
+stocksDescription = ir.get_all_description(df)
 agentNames = ["OMAR", "DENNIS", "RIGOR", "JOSHUA", "KENNETH"]
 mLHistoryList = []
+
+#implement save changes functionality to modify values on dataframe
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -28,11 +34,32 @@ class MainWindow(QMainWindow):
         btn = QPushButton(btn_icon, "Inventory")
         btn.setFixedSize(200, 60)
         btn.setIconSize(QSize(20, 20))
-        font = QFont("Sans-serif")
+        font = QFont("SansSerif")
         btn.setFont(font)
         btn.pressed.connect(self.activate_tab_1)
         button_layout.addWidget(btn)
-        self.stacklayout.addWidget(Color("red"))
+        #START OF INVENTORY WINDOW
+        inventoryContainer = QWidget()
+        inventoryVBLayout = QVBoxLayout(inventoryContainer)
+        font = QFont("SansSerif", 15, QFont.Bold)
+        inventoryTitle = QLabel("INVENTORY")
+        inventoryTitle.setFont(font)
+        inventoryTable = QGridLayout()
+        columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE/CASE"]
+        for t in range(len(columnTitles)):
+            title = QLabel(columnTitles[t])
+            font = QFont("SansSerif", 10, QFont.Medium)
+            title.setFont(font)
+            inventoryTable.addWidget(title, 0, t)
+
+        for i in range(1, len(stocksCaseValues)+ 1):
+            inventoryTable.addWidget(QLabel(stocksDescription[i-1]), i, 0)
+            inventoryTable.addWidget(QLabel(stocksCaseValues[i-1]), i, 1)
+            inventoryTable.addWidget(QLabel(stocksPieceValues[i-1]), i, 2)
+            inventoryTable.addWidget(QLabel(stocksPiecePerCase[i-1]), i, 3)
+        inventoryVBLayout.addWidget(inventoryTitle)
+        inventoryVBLayout.addLayout(inventoryTable)
+        self.stacklayout.addWidget(inventoryContainer)
 
         btn_icon = qta.icon('fa5s.sun')
         btn = QPushButton(btn_icon, "Morning Load")
@@ -64,7 +91,7 @@ class MainWindow(QMainWindow):
         chooseItemLabel = QLabel("CHOOSE ITEM")
         chooseItemLabel.setFont(font)
         self.descriptionComboBox = QComboBox()
-        self.descriptionComboBox.addItems(["ALFONSO 50cl", "ALFONSO 70cl"])
+        self.descriptionComboBox.addItems(stocksDescription)
         self.descriptionComboBox.currentIndexChanged.connect( self.index_changed )
         itemIndex = self.descriptionComboBox.currentIndex()
         #self.descriptionComboBox.setEditable(True)
