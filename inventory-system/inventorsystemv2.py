@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QStyle, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QDoubleSpinBox, QTextEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QDoubleSpinBox, QTextEdit
 from PyQt6.QtGui import QPalette, QColor, QPixmap, QFont
 from layout_colorwidget import Color
 import qtawesome as qta
@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Warehouse Inventory")
-        #self.setFixedSize(QSize(700, 700))
+        self.setFixedSize(QSize(700, 400))
     
         pagelayout = QHBoxLayout()
         button_layout = QVBoxLayout()
@@ -44,7 +44,13 @@ class MainWindow(QMainWindow):
         font = QFont("SansSerif", 15, QFont.Bold)
         inventoryTitle = QLabel("INVENTORY")
         inventoryTitle.setFont(font)
+        #inventoryTableContainer = QWidget()
         inventoryTable = QGridLayout()
+        scrollInventory = QScrollArea()
+        scrollInventory.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scrollInventory.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scrollInventory.setWidgetResizable(True)
+        scrollInventory.setWidget(inventoryContainer)
         columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE/CASE"]
         for t in range(len(columnTitles)):
             title = QLabel(columnTitles[t])
@@ -59,7 +65,7 @@ class MainWindow(QMainWindow):
             inventoryTable.addWidget(QLabel(stocksPiecePerCase[i-1]), i, 3)
         inventoryVBLayout.addWidget(inventoryTitle)
         inventoryVBLayout.addLayout(inventoryTable)
-        self.stacklayout.addWidget(inventoryContainer)
+        self.stacklayout.addWidget(scrollInventory)
 
         btn_icon = qta.icon('fa5s.sun')
         btn = QPushButton(btn_icon, "Morning Load")
@@ -174,9 +180,13 @@ class MainWindow(QMainWindow):
         self.morningLoadLayout.addWidget(stocksPieceLabel, 0, 2)
         self.morningLoadLayout.addWidget(stocksPiecePerCaseLabel, 0, 3)
         self.morningLoadLayout.addWidget(self.currentItemLabel, 1, 0)
-        self.morningLoadLayout.addWidget(self.stocksCaseCurrent, 1, 1)  
+        self.currentItemLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.morningLoadLayout.addWidget(self.stocksCaseCurrent, 1, 1)
+        self.stocksCaseCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)  
         self.morningLoadLayout.addWidget(self.stocksPieceCurrent, 1, 2)
+        self.stocksPieceCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.morningLoadLayout.addWidget(self.stocksPiecePerCaseCurrent, 1, 3)
+        self.stocksPiecePerCaseCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)
         #self.morningLoad.addWidget(self.agentName, 3, 0)
         self.morningLoadVbox.addLayout(self.morningLoadLayout)
         self.morningLoadVbox.addLayout(caseInputHBox)
@@ -245,9 +255,13 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(btn)
         self.stacklayout.addWidget(Color("orange"))
 
+        #scroll = QScrollArea()
         widget = QWidget()
         widget.setLayout(pagelayout)
+        self.setGeometry(600, 100, 700, 400)
         self.setCentralWidget(widget)
+
+
 
     def activate_tab_1(self):
         self.stacklayout.setCurrentIndex(0)
