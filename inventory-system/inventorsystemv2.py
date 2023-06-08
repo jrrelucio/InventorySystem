@@ -310,8 +310,11 @@ class MainWindow(QMainWindow):
         self.stocksPieceCurrent.setText(str(stocksPieceValue))
 
         itemIndex = self.descriptionComboBox.currentIndex()
+        #updating data on local list
         stocksCaseValues[itemIndex] = str(stocksCaseValue)
         stocksPieceValues[itemIndex] = str(stocksPieceValue)
+        #updating data on excel file
+        ir.update_stocks_df(itemIndex, stocksCaseValue, stocksPieceValue)
         print("Claimed Item Deducted")
         
         print("Add to table: ", self.currentAgent.text(), inputCaseValue, inputPieceValue)
