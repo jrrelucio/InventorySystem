@@ -18,5 +18,5 @@ def get_all_ppc_values(df):
 def update_stocks_df(index, newcase, newpiece):
    df.at[index, "Case"] = newcase
    df.at[index, "Piece"] = newpiece
-   df.to_excel("current_stocks.xlsx", "Inventory")
+   df.to_excel("current_stocks.xlsx", sheet_name="Inventory", index=False)
    print("Dataframe updated")

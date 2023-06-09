@@ -12,8 +12,9 @@ stocksCaseValues = [str(x) for x in ir.get_all_case_values(df)]
 stocksPieceValues = [str(x) for x in ir.get_all_piece_values(df)]
 stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
 stocksDescription = ir.get_all_description(df)
-agentNames = ["OMAR", "DENNIS", "RIGOR", "JOSHUA", "KENNETH"]
+agentNames = ["OMAR", "DENNIS", "RIGOR", "JOSHUA", "KENNETH", "RAND", "AEDAN"]
 mLHistoryList = []
+bLHistoryList = []
 
 #implement save changes functionality to modify values on dataframe
 class MainWindow(QMainWindow):
@@ -155,7 +156,6 @@ class MainWindow(QMainWindow):
         claimedItemsLabel = QLabel("Claimed Items")
         totalLabel = QLabel("Total")
         self.claimIndex = 1
-        self.currentAgent = QLabel(self.agentComboBox.currentText())
 
         self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
         self.pieceInputLabel = QLabel("How many piece of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
@@ -169,7 +169,6 @@ class MainWindow(QMainWindow):
         self.morningLoadVbox.addLayout(chooseAgentBox)
         
 
-        self.currentAgent = QLabel(self.agentComboBox.currentText())
         #adding items to main grid
         self.morningLoadVbox.addLayout(chooseItemBox)
         self.morningLoadLayout = QGridLayout()
@@ -223,6 +222,8 @@ class MainWindow(QMainWindow):
         chooseAgentLabelBL.setFont(fontChoose)
         self.agentComboBoxBL = QComboBox()
         self.agentComboBoxBL.addItems(agentNames)
+        self.agentComboBoxBL.currentTextChanged.connect( self.agent_changed_BL )
+        self.currentAgentBL = QLabel(self.agentComboBoxBL.currentText())
         chooseAgentBoxBL.addWidget(chooseAgentLabelBL)
         chooseAgentBoxBL.addWidget(self.agentComboBoxBL)
         chooseItemBoxBL = QHBoxLayout()
@@ -230,6 +231,7 @@ class MainWindow(QMainWindow):
         chooseItemLabelBL.setFont(fontChoose)
         self.chooseItemComboBoxBL = QComboBox()
         self.chooseItemComboBoxBL.addItems(stocksDescription)
+        self.chooseItemComboBoxBL.currentIndexChanged.connect( self.index_changed_BL )
         chooseItemBoxBL.addWidget(chooseItemLabelBL)
         chooseItemBoxBL.addWidget(self.chooseItemComboBoxBL)
         #backloadGrid Section
@@ -237,33 +239,43 @@ class MainWindow(QMainWindow):
         columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE PER CASE"]
         for i in range(len(columnTitles)):
             backloadGrid.addWidget(QLabel(columnTitles[i]), 0, i)
-        currentItemBL = QLabel(self.chooseItemComboBoxBL.currentText())
-        currentItemBL.setAlignment(Qt.AlignmentFlag.AlignTop)
-        stocksCaseCurrentBL = QLabel(stocksCaseValues[self.chooseItemComboBoxBL.currentIndex()])
-        stocksCaseCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
-        stocksPieceCurrentBL = QLabel(stocksPieceValues[self.chooseItemComboBoxBL.currentIndex()])
-        stocksPieceCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
-        stocksPPCCurrentBL = QLabel(stocksPiecePerCase[self.chooseItemComboBoxBL.currentIndex()])
-        stocksPPCCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
-        backloadGrid.addWidget(currentItemBL, 1, 0)
-        backloadGrid.addWidget(stocksCaseCurrentBL, 1, 1)
-        backloadGrid.addWidget(stocksPieceCurrentBL, 1, 2)
-        backloadGrid.addWidget(stocksPPCCurrentBL, 1, 3)
+        self.currentItemBL = QLabel(self.chooseItemComboBoxBL.currentText())
+        self.currentItemBL.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.stocksCaseCurrentBL = QLabel(stocksCaseValues[self.chooseItemComboBoxBL.currentIndex()])
+        self.stocksCaseCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.stocksPieceCurrentBL = QLabel(stocksPieceValues[self.chooseItemComboBoxBL.currentIndex()])
+        self.stocksPieceCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.stocksPPCCurrentBL = QLabel(stocksPiecePerCase[self.chooseItemComboBoxBL.currentIndex()])
+        self.stocksPPCCurrentBL.setAlignment(Qt.AlignmentFlag.AlignTop)
+        backloadGrid.addWidget(self.currentItemBL, 1, 0)
+        backloadGrid.addWidget(self.stocksCaseCurrentBL, 1, 1)
+        backloadGrid.addWidget(self.stocksPieceCurrentBL, 1, 2)
+        backloadGrid.addWidget(self.stocksPPCCurrentBL, 1, 3)
         #caseInputBox Section
         caseInputBoxBL = QHBoxLayout()
-        self.caseInputLabelBL = QLabel("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" claim?")
+        self.caseInputLabelBL = QLabel("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
         self.caseInputBL = QDoubleSpinBox()
+        self.caseInputBL.setDecimals(0)
         #pieceInputBox Section
         pieceInputBoxBL = QHBoxLayout()
-        self.pieceInputLabelBL = QLabel("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" claim?")
+        self.pieceInputLabelBL = QLabel("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
         self.pieceInputBL = QDoubleSpinBox()
+        self.pieceInputBL.setDecimals(0)
         caseInputBoxBL.addWidget(self.caseInputLabelBL)
         caseInputBoxBL.addWidget(self.caseInputBL)
         pieceInputBoxBL.addWidget(self.pieceInputLabelBL)
         pieceInputBoxBL.addWidget(self.pieceInputBL)
-        loadBtnBL = QPushButton("LOAD")
+        #setting maximum values of doublespinbox
+        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        if int(self.stocksCaseCurrentBL.text()) > 0:
+            self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
+        else:
+            self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
+        self.loadBtnBL = QPushButton(text="LOAD")
+        self.loadBtnBL.clicked.connect(self.update_stocks_BL)
+        self.returnIndex = 1
         font = QFont("SansSerif")
-        loadBtnBL.setFont(font)
+        self.loadBtnBL.setFont(font)
 
 
         backloadLayout.addWidget(backloadTitle)
@@ -272,7 +284,7 @@ class MainWindow(QMainWindow):
         backloadLayout.addLayout(backloadGrid)
         backloadLayout.addLayout(caseInputBoxBL)
         backloadLayout.addLayout(pieceInputBoxBL)
-        backloadLayout.addWidget(loadBtnBL)
+        backloadLayout.addWidget(self.loadBtnBL)
         self.stacklayout.addWidget(backloadContainer)
 
         btn_icon = qta.icon('fa5s.clock')
@@ -311,6 +323,8 @@ class MainWindow(QMainWindow):
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_5)
         button_layout.addWidget(btn)
+        #START OF BACKLOAD HISTORY WINDOW
+        self.bLHistoryGrid = QGridLayout()
         self.stacklayout.addWidget(Color("orange"))
 
         #scroll = QScrollArea()
@@ -351,6 +365,21 @@ class MainWindow(QMainWindow):
         else:
             self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
 
+    def index_changed_BL(self, index):
+        self.caseInputLabelBL.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
+        self.pieceInputLabelBL.setText("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
+        self.currentItemBL.setText(self.chooseItemComboBoxBL.currentText())
+        self.stocksCaseCurrentBL.setText(stocksCaseValues[index])
+        self.stocksPieceCurrentBL.setText(stocksPieceValues[index])
+        self.stocksPPCCurrentBL.setText(stocksPiecePerCase[index])
+
+        #setting maximum values of doublespinbox
+        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        if int(self.stocksCaseCurrentBL.text()) > 0:
+            self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
+        else:
+            self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
+
     def update_stocks(self):
         stocksCaseValue = int(self.stocksCaseCurrent.text())
         inputCaseValue = int(self.caseInput.value())
@@ -375,9 +404,9 @@ class MainWindow(QMainWindow):
         ir.update_stocks_df(itemIndex, stocksCaseValue, stocksPieceValue)
         print("Claimed Item Deducted")
         
-        print("Add to table: ", self.currentAgent.text(), inputCaseValue, inputPieceValue)
+        print("Add to table: ", self.agentComboBox.currentText(), inputCaseValue, inputPieceValue)
         index = self.claimIndex
-        agentLabel = QLabel(self.currentAgent.text())
+        agentLabel = QLabel(self.agentComboBox.currentText())
         caseLabel = QLabel(str(int(self.caseInput.value())))
         pieceLabel = QLabel(str(int(self.pieceInput.value())))
         descriptionLabel = QLabel(self.descriptionComboBox.currentText())
@@ -390,25 +419,78 @@ class MainWindow(QMainWindow):
         self.mLHistoryGrid.addWidget(descriptionLabel, index, 1)
         self.mLHistoryGrid.addWidget(caseLabel, index, 2)
         self.mLHistoryGrid.addWidget(pieceLabel, index, 3)
-        self.claimIndex += 1
-        mLHistoryList.append([self.currentAgent.text(), str(int(self.caseInput.value())), str(int(self.pieceInput.value())), self.descriptionComboBox.currentText()])
+        self.returnIndex += 1
+        mLHistoryList.append([self.agentComboBox.currentText(), str(int(self.caseInput.value())), str(int(self.pieceInput.value())), self.descriptionComboBox.currentText()])
         print(mLHistoryList)
         self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
         if int(self.stocksCaseCurrent.text()) > 0:
             self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()) - 1)
         else:
-            self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
+            self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()))
 
         #set values back to 0 after loading
         self.caseInput.setValue(0)
         self.pieceInput.setValue(0)
 
-    def agent_changed(self, name):
-        self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
-        self.pieceInputLabel.setText("How many pieces of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
-        self.currentAgent.setText(name)
+    def update_stocks_BL(self):
+        stocksCaseValue = int(self.stocksCaseCurrentBL.text())
+        inputCaseValue = int(self.caseInputBL.value())
+        stocksPieceValue = int(self.stocksPieceCurrentBL.text())
+        inputPieceValue = int(self.pieceInputBL.value())
+        piecePerCaseValue = int(self.stocksPPCCurrentBL.text())
+        if (stocksPieceValue + inputPieceValue) >= piecePerCaseValue:
+            stocksPieceValue = (stocksPieceValue + inputPieceValue) - piecePerCaseValue
+            stocksCaseValue += 1
+        else:
+            stocksPieceValue = stocksPieceValue + inputPieceValue
+        stocksCaseValue += inputCaseValue
 
-    
+        self.stocksCaseCurrentBL.setText(str(stocksCaseValue))
+        self.stocksPieceCurrentBL.setText(str(stocksPieceValue))
+
+        itemIndex = self.chooseItemComboBoxBL.currentIndex()
+        #updating data on local list
+        stocksCaseValues[itemIndex] = str(stocksCaseValue)
+        stocksPieceValues[itemIndex] = str(stocksPieceValue)
+        #updating data on excel file
+        ir.update_stocks_df(itemIndex, stocksCaseValue, stocksPieceValue)
+        print("Claimed Item Deducted")
+        
+        print("Add to table: ", self.agentComboBoxBL.currentText(), inputCaseValue, inputPieceValue)
+        index = self.returnIndex
+        agentLabel = QLabel(self.agentComboBoxBL.currentText())
+        caseLabel = QLabel(str(int(self.caseInputBL.value())))
+        pieceLabel = QLabel(str(int(self.pieceInputBL.value())))
+        descriptionLabel = QLabel(self.chooseItemComboBoxBL.currentText())
+        font = QFont("SansSerif", 10, QFont.Normal)
+        agentLabel.setFont(font)
+        caseLabel.setFont(font)
+        pieceLabel.setFont(font)
+        descriptionLabel.setFont(font)
+        self.bLHistoryGrid.addWidget(agentLabel, index, 0)
+        self.bLHistoryGrid.addWidget(descriptionLabel, index, 1)
+        self.bLHistoryGrid.addWidget(caseLabel, index, 2)
+        self.bLHistoryGrid.addWidget(pieceLabel, index, 3)
+        self.claimIndex += 1
+        bLHistoryList.append([self.agentComboBoxBL.currentText(), str(int(self.caseInputBL.value())), str(int(self.pieceInputBL.value())), self.chooseItemComboBoxBL.currentText()])
+        print(bLHistoryList)
+        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        if int(self.stocksCaseCurrentBL.text()) > 0:
+            self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
+        else:
+            self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()))
+
+        #set values back to 0 after loading
+        self.caseInputBL.setValue(0)
+        self.pieceInputBL.setValue(0)
+
+    def agent_changed(self, name):
+        self.caseInputLabel.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel.setText("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+
+    def agent_changed_BL(self, name):
+        self.caseInputLabelBL.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
+        self.pieceInputLabelBL.setText("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
 
 app = QApplication(sys.argv)
 
