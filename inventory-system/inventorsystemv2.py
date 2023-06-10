@@ -46,12 +46,13 @@ class MainWindow(QMainWindow):
         fontTitle = QFont("SansSerif", 15, QFont.Bold)
         inventoryTitle.setFont(fontTitle)
         #self.inventoryTableContainer = QWidget()
-        self.inventoryTable = QGridLayout()
+        self.inventoryTableContainer = QWidget()
+        self.inventoryTable = QGridLayout(self.inventoryTableContainer)
         scrollInventory = QScrollArea()
         scrollInventory.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         scrollInventory.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scrollInventory.setWidgetResizable(True)
-        scrollInventory.setWidget(inventoryContainer)
+        scrollInventory.setWidget(self.inventoryTableContainer)
         self.columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE/CASE"]
         for t in range(len(self.columnTitles)):
             title = QLabel(self.columnTitles[t])
@@ -65,8 +66,8 @@ class MainWindow(QMainWindow):
             self.inventoryTable.addWidget(QLabel(stocksPieceValues[i-1]), i, 2)
             self.inventoryTable.addWidget(QLabel(stocksPiecePerCase[i-1]), i, 3)
         inventoryVBLayout.addWidget(inventoryTitle)
-        inventoryVBLayout.addLayout(self.inventoryTable)
-        self.stacklayout.addWidget(scrollInventory)
+        inventoryVBLayout.addWidget(scrollInventory)
+        self.stacklayout.addWidget(inventoryContainer)
 
         btn_icon = qta.icon('fa5s.sun')
         btn = QPushButton(btn_icon, "Morning Load")
@@ -303,16 +304,23 @@ class MainWindow(QMainWindow):
         mLHistoryLabel = QLabel("MORNING LOAD HISTORY")
         mLHistoryLabel.setFont(fontTitle)
         mLHistoryLayout.addWidget(mLHistoryLabel)
-        self.mLHistoryGrid = QGridLayout()
+        mLHistoryGridScroll = QScrollArea()
+        mLHistoryGridContainer = QWidget()
+        self.mLHistoryGrid = QGridLayout(mLHistoryGridContainer)
         for t in range(len(self.columnTitles)):
             font = QFont("SansSerif", 10, QFont.Medium)
             titleLabel = QLabel(self.columnTitles[t])
             titleLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
             titleLabel.setFont(font)
             self.mLHistoryGrid.addWidget(titleLabel, 0, t)
-        mLHistoryLayout.addLayout(self.mLHistoryGrid)
-        self.stacklayout.addWidget(mLHistoryContainer)
 
+        mLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        mLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        mLHistoryGridScroll.setWidgetResizable(True)
+        mLHistoryGridScroll.setWidget(mLHistoryGridContainer)
+
+        mLHistoryLayout.addWidget(mLHistoryGridScroll)
+        self.stacklayout.addWidget(mLHistoryContainer)
 
 
         btn_icon = qta.icon('fa5s.clock')
@@ -323,9 +331,30 @@ class MainWindow(QMainWindow):
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_5)
         button_layout.addWidget(btn)
-        #START OF BACKLOAD HISTORY WINDOW
-        self.bLHistoryGrid = QGridLayout()
-        self.stacklayout.addWidget(Color("orange"))
+        #backload history window
+        bLHistoryContainer = QWidget()
+        bLHistoryLayout = QVBoxLayout(bLHistoryContainer)
+        self.columnTitles = ["Agent", "Description", "Case", "Piece"]
+        bLHistoryLabel = QLabel("BACKLOAD HISTORY")
+        bLHistoryLabel.setFont(fontTitle)
+        bLHistoryLayout.addWidget(bLHistoryLabel)
+        bLHistoryGridScroll = QScrollArea()
+        bLHistoryGridContainer = QWidget()
+        self.bLHistoryGrid = QGridLayout(bLHistoryGridContainer)
+        for t in range(len(self.columnTitles)):
+            font = QFont("SansSerif", 10, QFont.Medium)
+            titleLabel = QLabel(self.columnTitles[t])
+            titleLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            titleLabel.setFont(font)
+            self.bLHistoryGrid.addWidget(titleLabel, 0, t)
+
+        bLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        bLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        bLHistoryGridScroll.setWidgetResizable(True)
+        bLHistoryGridScroll.setWidget(bLHistoryGridContainer)
+
+        bLHistoryLayout.addWidget(bLHistoryGridScroll)
+        self.stacklayout.addWidget(bLHistoryContainer)
 
         #scroll = QScrollArea()
         widget = QWidget()
@@ -419,7 +448,7 @@ class MainWindow(QMainWindow):
         self.mLHistoryGrid.addWidget(descriptionLabel, index, 1)
         self.mLHistoryGrid.addWidget(caseLabel, index, 2)
         self.mLHistoryGrid.addWidget(pieceLabel, index, 3)
-        self.returnIndex += 1
+        self.claimIndex += 1
         mLHistoryList.append([self.agentComboBox.currentText(), str(int(self.caseInput.value())), str(int(self.pieceInput.value())), self.descriptionComboBox.currentText()])
         print(mLHistoryList)
         self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
@@ -471,7 +500,7 @@ class MainWindow(QMainWindow):
         self.bLHistoryGrid.addWidget(descriptionLabel, index, 1)
         self.bLHistoryGrid.addWidget(caseLabel, index, 2)
         self.bLHistoryGrid.addWidget(pieceLabel, index, 3)
-        self.claimIndex += 1
+        self.returnIndex += 1
         bLHistoryList.append([self.agentComboBoxBL.currentText(), str(int(self.caseInputBL.value())), str(int(self.pieceInputBL.value())), self.chooseItemComboBoxBL.currentText()])
         print(bLHistoryList)
         self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
