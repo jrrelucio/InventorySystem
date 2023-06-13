@@ -6,15 +6,18 @@ from layout_colorwidget import Color
 import qtawesome as qta
 import pandas as pd
 import inventoryread as ir
-df = pd.read_excel(r'C:\Users\Joshua\Desktop\Inventory System\InventorySystem\inventory-system\current_stocks.xlsx')
-
+df = pd.read_excel("current_stocks.xlsx")
+df_history_ML = pd.read_excel('historyml.xlsx')
+df_history_BL = pd.read_excel('historybl.xlsx')
 stocksCaseValues = [str(x) for x in ir.get_all_case_values(df)]
 stocksPieceValues = [str(x) for x in ir.get_all_piece_values(df)]
 stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
 stocksDescription = ir.get_all_description(df)
-agentNames = ["OMAR", "DENNIS", "RIGOR", "JOSHUA", "KENNETH", "RAND", "AEDAN"]
-mLHistoryList = []
-bLHistoryList = []
+agentNames = ["NOEL", "OMAR", "RIGOR", "ENRICO", "ARNEL", "VICK", "MANNY", "ROMEL", "ELDIE", "JEROME", "DENNIS", "JERALD", "JOMAR", "MELVIN"]
+mLHistoryList = df_history_ML.values.tolist()
+print(mLHistoryList)
+bLHistoryList = df_history_BL.values.tolist()
+print(bLHistoryList)
 
 #implement save changes functionality to modify values on dataframe
 class MainWindow(QMainWindow):
@@ -267,11 +270,11 @@ class MainWindow(QMainWindow):
         pieceInputBoxBL.addWidget(self.pieceInputLabelBL)
         pieceInputBoxBL.addWidget(self.pieceInputBL)
         #setting maximum values of doublespinbox
-        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        #self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
         if int(self.stocksCaseCurrentBL.text()) > 0:
             self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
-        else:
-            self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
+        #else:
+        #    self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
         self.loadBtnBL = QPushButton(text="LOAD")
         self.loadBtnBL.clicked.connect(self.update_stocks_BL)
         self.returnIndex = 1
@@ -403,11 +406,11 @@ class MainWindow(QMainWindow):
         self.stocksPPCCurrentBL.setText(stocksPiecePerCase[index])
 
         #setting maximum values of doublespinbox
-        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        #self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
         if int(self.stocksCaseCurrentBL.text()) > 0:
             self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
-        else:
-            self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
+        #else:
+        #    self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
 
     def update_stocks(self):
         stocksCaseValue = int(self.stocksCaseCurrent.text())
@@ -424,13 +427,15 @@ class MainWindow(QMainWindow):
 
         self.stocksCaseCurrent.setText(str(stocksCaseValue))
         self.stocksPieceCurrent.setText(str(stocksPieceValue))
+        self.stocksCaseCurrentBL.setText(str(stocksCaseValue))
+        self.stocksPieceCurrentBL.setText(str(stocksPieceValue))
 
         itemIndex = self.descriptionComboBox.currentIndex()
         #updating data on local list
         stocksCaseValues[itemIndex] = str(stocksCaseValue)
         stocksPieceValues[itemIndex] = str(stocksPieceValue)
         #updating data on excel file
-        ir.update_stocks_df(itemIndex, stocksCaseValue, stocksPieceValue)
+        ir.update_stocks_df(df, itemIndex, stocksCaseValue, stocksPieceValue)
         print("Claimed Item Deducted")
         
         print("Add to table: ", self.agentComboBox.currentText(), inputCaseValue, inputPieceValue)
@@ -449,8 +454,8 @@ class MainWindow(QMainWindow):
         self.mLHistoryGrid.addWidget(caseLabel, index, 2)
         self.mLHistoryGrid.addWidget(pieceLabel, index, 3)
         self.claimIndex += 1
-        mLHistoryList.append([self.agentComboBox.currentText(), str(int(self.caseInput.value())), str(int(self.pieceInput.value())), self.descriptionComboBox.currentText()])
-        print(mLHistoryList)
+        mLHistoryList.append([self.agentComboBox.currentText(), self.descriptionComboBox.currentText(), str(int(self.caseInput.value())), str(int(self.pieceInput.value()))])
+        ir.update_history_ml(mLHistoryList, "Morning Load")
         self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
         if int(self.stocksCaseCurrent.text()) > 0:
             self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()) - 1)
@@ -476,13 +481,15 @@ class MainWindow(QMainWindow):
 
         self.stocksCaseCurrentBL.setText(str(stocksCaseValue))
         self.stocksPieceCurrentBL.setText(str(stocksPieceValue))
+        self.stocksCaseCurrent.setText(str(stocksCaseValue))
+        self.stocksPieceCurrent.setText(str(stocksPieceValue))
 
         itemIndex = self.chooseItemComboBoxBL.currentIndex()
         #updating data on local list
         stocksCaseValues[itemIndex] = str(stocksCaseValue)
         stocksPieceValues[itemIndex] = str(stocksPieceValue)
         #updating data on excel file
-        ir.update_stocks_df(itemIndex, stocksCaseValue, stocksPieceValue)
+        ir.update_stocks_df(df, itemIndex, stocksCaseValue, stocksPieceValue)
         print("Claimed Item Deducted")
         
         print("Add to table: ", self.agentComboBoxBL.currentText(), inputCaseValue, inputPieceValue)
@@ -501,21 +508,21 @@ class MainWindow(QMainWindow):
         self.bLHistoryGrid.addWidget(caseLabel, index, 2)
         self.bLHistoryGrid.addWidget(pieceLabel, index, 3)
         self.returnIndex += 1
-        bLHistoryList.append([self.agentComboBoxBL.currentText(), str(int(self.caseInputBL.value())), str(int(self.pieceInputBL.value())), self.chooseItemComboBoxBL.currentText()])
-        print(bLHistoryList)
-        self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
+        bLHistoryList.append([self.agentComboBoxBL.currentText(), self.chooseItemComboBoxBL.currentText(), str(int(self.caseInputBL.value())), str(int(self.pieceInputBL.value()))])
+        ir.update_history_bl(bLHistoryList, "Backload")
+        #self.caseInputBL.setMaximum(int(self.stocksCaseCurrentBL.text()))
         if int(self.stocksCaseCurrentBL.text()) > 0:
             self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
-        else:
-            self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()))
+        #else:
+        #    self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()))
 
         #set values back to 0 after loading
         self.caseInputBL.setValue(0)
         self.pieceInputBL.setValue(0)
 
     def agent_changed(self, name):
-        self.caseInputLabel.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
-        self.pieceInputLabel.setText("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel.setText("How many pieces of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
 
     def agent_changed_BL(self, name):
         self.caseInputLabelBL.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
