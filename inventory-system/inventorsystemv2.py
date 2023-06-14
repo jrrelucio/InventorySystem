@@ -1,12 +1,17 @@
 import sys
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QDoubleSpinBox, QTextEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QDoubleSpinBox, QFileDialog, QLineEdit
 from PyQt6.QtGui import QPalette, QColor, QPixmap, QFont
 from layout_colorwidget import Color
 import qtawesome as qta
 import pandas as pd
 import inventoryread as ir
+from pathlib import Path
+from datetime import date
+
+#initializing dataframes
 df = pd.read_excel("current_stocks.xlsx")
+df_initial_stocks = pd.read_excel("initial_stocks.xlsx")
 df_history_ML = pd.read_excel('historyml.xlsx')
 df_history_BL = pd.read_excel('historybl.xlsx')
 stocksCaseValues = [str(x) for x in ir.get_all_case_values(df)]
@@ -15,10 +20,9 @@ stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
 stocksDescription = ir.get_all_description(df)
 agentNames = ["NOEL", "OMAR", "RIGOR", "ENRICO", "ARNEL", "VICK", "MANNY", "ROMEL", "ELDIE", "JEROME", "DENNIS", "JERALD", "JOMAR", "MELVIN"]
 mLHistoryList = df_history_ML.values.tolist()
-print(mLHistoryList)
 bLHistoryList = df_history_BL.values.tolist()
-print(bLHistoryList)
 
+ 
 #implement save changes functionality to modify values on dataframe
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -159,7 +163,7 @@ class MainWindow(QMainWindow):
 
         claimedItemsLabel = QLabel("Claimed Items")
         totalLabel = QLabel("Total")
-        self.claimIndex = 1
+        self.claimIndex = len(mLHistoryList)
 
         self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
         self.pieceInputLabel = QLabel("How many piece of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
@@ -190,19 +194,22 @@ class MainWindow(QMainWindow):
         self.morningLoadLayout.addWidget(self.stocksPiecePerCaseCurrent, 1, 3)
         self.stocksPiecePerCaseCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)
         #self.morningLoad.addWidget(self.agentName, 3, 0)
+
         self.morningLoadVbox.addLayout(self.morningLoadLayout)
         self.morningLoadVbox.addLayout(caseInputHBox)
         self.morningLoadVbox.addLayout(pieceInputHBox)
         self.morningLoadVbox.addWidget(self.loadBtn)
         
-
-        """""""""
-        self.morningLoadLayout.addWidget(claimedItemsLabel, 6, 0)
-        self.morningLoadLayout.addWidget(claimedAgentLabel, 7, 0)
-        self.morningLoadLayout.addWidget(claimedCaseLabel, 7, 1)
-        self.morningLoadLayout.addWidget(claimedPieceLabel, 7, 2)
-        self.morningLoadLayout.addWidget(claimedDescriptionLabel, 7, 3)
-        """""""""
+        #Export Summary Button
+        self.exportBox = QHBoxLayout()
+        exportTitle = QLabel("EXPORT SUMMARY")
+        exportTitle.setFont(fontChoose)
+        self.exportBtn = QPushButton("EXPORT")
+        self.exportBox.addWidget(exportTitle)
+        self.exportBox.addWidget(self.exportBtn)
+        self.morningLoadVbox.addLayout(self.exportBox)
+        self.exportBtn.clicked.connect(self.export_function)
+        self.dir_name_edit = QLineEdit()
 
         self.stacklayout.addWidget(morningLoadContainer)
 
@@ -277,7 +284,7 @@ class MainWindow(QMainWindow):
         #    self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
         self.loadBtnBL = QPushButton(text="LOAD")
         self.loadBtnBL.clicked.connect(self.update_stocks_BL)
-        self.returnIndex = 1
+        self.returnIndex = len(bLHistoryList)
         font = QFont("SansSerif")
         self.loadBtnBL.setFont(font)
 
@@ -317,6 +324,23 @@ class MainWindow(QMainWindow):
             titleLabel.setFont(font)
             self.mLHistoryGrid.addWidget(titleLabel, 0, t)
 
+        for row in mLHistoryList:
+            agentLabel = QLabel(row[0])
+            descriptionLabel = QLabel(row[1])
+            caseLabel = QLabel(str(row[2]))
+            pieceLabel = QLabel(str(row[3]))
+            
+            font = QFont("SansSerif", 10, QFont.Normal)
+            agentLabel.setFont(font)
+            caseLabel.setFont(font)
+            pieceLabel.setFont(font)
+            descriptionLabel.setFont(font)
+            self.mLHistoryGrid.addWidget(agentLabel, self.claimIndex, 0)
+            self.mLHistoryGrid.addWidget(descriptionLabel, self.claimIndex, 1)
+            self.mLHistoryGrid.addWidget(caseLabel, self.claimIndex, 2)
+            self.mLHistoryGrid.addWidget(pieceLabel, self.claimIndex, 3)
+            self.claimIndex += 1
+
         mLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         mLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         mLHistoryGridScroll.setWidgetResizable(True)
@@ -350,6 +374,25 @@ class MainWindow(QMainWindow):
             titleLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
             titleLabel.setFont(font)
             self.bLHistoryGrid.addWidget(titleLabel, 0, t)
+
+        for row in bLHistoryList:
+            agentLabel = QLabel(row[0])
+            descriptionLabel = QLabel(row[1])
+            caseLabel = QLabel(str(row[2]))
+            pieceLabel = QLabel(str(row[3]))
+            
+            font = QFont("SansSerif", 10, QFont.Normal)
+            agentLabel.setFont(font)
+            caseLabel.setFont(font)
+            pieceLabel.setFont(font)
+            descriptionLabel.setFont(font)
+            self.bLHistoryGrid.addWidget(agentLabel, self.returnIndex, 0)
+            self.bLHistoryGrid.addWidget(descriptionLabel, self.returnIndex, 1)
+            self.bLHistoryGrid.addWidget(caseLabel, self.returnIndex, 2)
+            self.bLHistoryGrid.addWidget(pieceLabel, self.returnIndex, 3)
+            self.returnIndex += 1
+
+
 
         bLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         bLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -528,6 +571,31 @@ class MainWindow(QMainWindow):
         self.caseInputLabelBL.setText("How many cases of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
         self.pieceInputLabelBL.setText("How many pieces of "+self.chooseItemComboBoxBL.currentText()+" will "+self.agentComboBoxBL.currentText()+" return?")
 
+    def export_function(self):
+        dir_name = QFileDialog.getSaveFileName(self, "Select a Directory", "summary.xlsx", "Excel Workbook (*.xlsx)")
+        frames = [ir.create_description_df(stocksDescription), 
+          ir.create_stocks_table(df_initial_stocks, "STOCKS"), 
+          ir.load_table(df_history_ML, stocksDescription, "Morning Load"), 
+          ir.load_table(df_history_BL, stocksDescription, "Backload"),
+          ir.create_stocks_table(df, "BEGINNING")
+          ]
+        if dir_name[0] == '':
+            return
+        result = pd.merge(frames[0], frames[1], left_index=True, right_index=True)
+        result = pd.merge(result, frames[2], left_index=True, right_index=True)
+        result = pd.merge(result, frames[3], left_index=True, right_index=True)
+        result = pd.merge(result, frames[4], left_index=True, right_index=True)
+        result.to_excel(dir_name[0], sheet_name=str(date.today()))
+        
+        #insert file saved prompt
+        self.exportBtn.setEnabled(False)
+        savedLabel = QLabel("FILE SAVED SUCCESSFULLY")
+        self.exportBox.addWidget(savedLabel)
+
+        #rewrite all dataframes
+        #empty out morning load history
+        #empty out backload history
+        #initial stocks = current stocks
 app = QApplication(sys.argv)
 
 window = MainWindow()
