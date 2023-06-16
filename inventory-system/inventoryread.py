@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
-from openpyxl import load_workbook
 from datetime import date
 #df = pd.read_excel("current_stocks.xlsx") #changed directory, make sure that the program runs on the location of file \inventory-system\
-stocks = load_workbook(filename="current_stocks.xlsx")
 
 def get_all_description(df):
     return list(df['Description'])

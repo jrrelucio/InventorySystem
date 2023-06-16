@@ -2,7 +2,6 @@ import sys
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QDoubleSpinBox, QFileDialog, QLineEdit
 from PyQt6.QtGui import QPalette, QColor, QPixmap, QFont
-from layout_colorwidget import Color
 import qtawesome as qta
 import pandas as pd
 import inventoryread as ir
