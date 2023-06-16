@@ -82,26 +82,9 @@ def load_table(df_history, description_list, title): #this function creates a mo
         #print(agent_index)
     return df_load
 
-#BACKLOAD INITIALIZATION
-df_history_bl = pd.read_excel("historybl.xlsx")
-
-#INITIAL STOCKS
-df_initial_stocks = pd.read_excel(r"C:\Users\Joshua\Desktop\May 15 inventory.xlsx")
-
-
-frames = [create_description_df(description_list), 
-          create_stocks_table(df_initial_stocks, "STOCKS"), 
-          load_table(df_history_ml, get_all_description(df_current_stocks), "Morning Load"), 
-          load_table(df_history_bl, get_all_description(df_current_stocks), "Backload"),
-          create_stocks_table(df_current_stocks, "BEGINNING")
-          ]
-
-result = pd.merge(frames[0], frames[1], left_index=True, right_index=True)
-result = pd.merge(result, frames[2], left_index=True, right_index=True)
-result = pd.merge(result, frames[3], left_index=True, right_index=True)
-result = pd.merge(result, frames[4], left_index=True, right_index=True)
-result.to_excel("summary.xlsx", sheet_name=str(date.today()))
-
+def copy_current_to_initial(df_current):
+    df_current.to_excel("initial_stocks.xlsx", sheet_name="Inventory", index=False)
+    print('INITIAL STOCKS UPDATED')
 
 #BACKLOAD EMPTY
 

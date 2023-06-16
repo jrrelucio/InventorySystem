@@ -161,8 +161,6 @@ class MainWindow(QMainWindow):
         claimedDescriptionLabel = QLabel("Description")
         #add item on table after computing
 
-        claimedItemsLabel = QLabel("Claimed Items")
-        totalLabel = QLabel("Total")
         self.claimIndex = len(mLHistoryList)
 
         self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
@@ -202,14 +200,13 @@ class MainWindow(QMainWindow):
         
         #Export Summary Button
         self.exportBox = QHBoxLayout()
-        exportTitle = QLabel("EXPORT SUMMARY")
+        exportTitle = QLabel("GENERATE DAILY REPORT")
         exportTitle.setFont(fontChoose)
         self.exportBtn = QPushButton("EXPORT")
         self.exportBox.addWidget(exportTitle)
         self.exportBox.addWidget(self.exportBtn)
         self.morningLoadVbox.addLayout(self.exportBox)
         self.exportBtn.clicked.connect(self.export_function)
-        self.dir_name_edit = QLineEdit()
 
         self.stacklayout.addWidget(morningLoadContainer)
 
@@ -593,6 +590,11 @@ class MainWindow(QMainWindow):
         self.exportBox.addWidget(savedLabel)
 
         #rewrite all dataframes
+        mLHistoryList = []
+        bLHistoryList = []
+        ir.update_history_ml(mLHistoryList, "Morning Load")
+        ir.update_history_bl(bLHistoryList, "Backload")
+        ir.copy_current_to_initial(df)
         #empty out morning load history
         #empty out backload history
         #initial stocks = current stocks
