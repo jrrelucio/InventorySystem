@@ -32,58 +32,102 @@ class MainWindow(QMainWindow):
     
         pagelayout = QVBoxLayout()
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(25, 25, 25, 25)
+        pagelayout.setContentsMargins(25, 25, 25, 25)
         button_layout.addStretch(1)
         self.stacklayout = QStackedLayout()
 
         pagelayout.addLayout(button_layout)
         pagelayout.addLayout(self.stacklayout)
 
+        #PROPERTIES
+        fontChoose = QFont("SansSerif", 12, QFont.DemiBold)
+        fontTable = QFont("SansSerif", 12, QFont.Medium)
+        fontButton = QFont("SansSerif", 10)
+        fontTitle = QFont("SansSerif", 18, QFont.Bold)
+        fontNormal = QFont("SansSerif", 10)
+
         btn_icon = qta.icon('fa5s.box-open')
         btn = QPushButton(btn_icon, "Inventory")
         btn.setFixedSize(200, 60)
         btn.setIconSize(QSize(20, 20))
-        font = QFont("SansSerif")
-        btn.setFont(font)
+        btn.setFont(fontButton)
         btn.pressed.connect(self.activate_tab_1)
         button_layout.addWidget(btn)
         #START OF INVENTORY WINDOW
         inventoryContainer = QWidget()
-        inventoryVBLayout = QVBoxLayout(inventoryContainer)
-        inventoryVBLayout.setContentsMargins(50, 50, 50, 50)
+        self.inventoryVBLayout = QVBoxLayout(inventoryContainer)
         inventoryTitle = QLabel("INVENTORY")
-        fontTitle = QFont("SansSerif", 18, QFont.Bold)
         inventoryTitle.setFont(fontTitle)
         #self.inventoryTableContainer = QWidget()
         self.inventoryTableContainer = QWidget()
         self.inventoryTable = QGridLayout(self.inventoryTableContainer)
-        scrollInventory = QScrollArea()
-        scrollInventory.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        scrollInventory.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scrollInventory.setWidgetResizable(True)
-        scrollInventory.setWidget(self.inventoryTableContainer)
-        self.columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE/CASE"]
+        self.scrollInventory = QScrollArea()
+        self.scrollInventory.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.scrollInventory.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scrollInventory.setWidgetResizable(True)
+        self.scrollInventory.setWidget(self.inventoryTableContainer)
+        self.columnTitles = ["Description", "Stocks (Case)", "Stocks (Piece)", "Piece per case", "Delivery (Case)", "Delivery (Piece)", "TOTAL (Case)", "TOTAL (Piece)"]
         for t in range(len(self.columnTitles)):
             title = QLabel(self.columnTitles[t])
             font = QFont("SansSerif", 10, QFont.Medium)
             title.setFont(font)
-            self.inventoryTable.addWidget(title, 0, t)
+            self.inventoryTable.addWidget(title, 1, t)
 
-        for i in range(1, len(stocksCaseValues)+ 1):
-            self.inventoryTable.addWidget(QLabel(stocksDescription[i-1]), i, 0)
-            self.inventoryTable.addWidget(QLabel(stocksCaseValues[i-1]), i, 1)
-            self.inventoryTable.addWidget(QLabel(stocksPieceValues[i-1]), i, 2)
-            self.inventoryTable.addWidget(QLabel(stocksPiecePerCase[i-1]), i, 3)
-        inventoryVBLayout.addWidget(inventoryTitle)
-        inventoryVBLayout.addWidget(scrollInventory)
+        for i in range(2, len(stocksCaseValues)+ 2):
+            self.inventoryTable.addWidget(QLabel(df_initial_stocks['Description'][i-2]), i, 0)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Case)'][i-2])), i, 1)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Piece)'][i-2])), i, 2)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Piece per case'][i-2])), i, 3)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Case)'][i-2])), i, 4)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Piece)'][i-2])), i, 5)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Case)'][i-2])), i, 6)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Piece)'][i-2])), i, 7)
+
+        #Delivery Section
+        deliveryTitle = QLabel("DELIVERY")
+        deliveryTitle.setFont(fontTitle)
+        deliveryChooseItemBox = QHBoxLayout()
+        deliveryChooseItemLabel = QLabel("Choose Item")
+        deliveryChooseItemLabel.setFont(fontTable)
+        self.delCIComboBox = QComboBox()
+        self.delCIComboBox.addItems(stocksDescription)
+        self.delCIComboBox.currentTextChanged.connect( self.del_index_changed )
+        self.delCIComboBox.setMaximumWidth(200)
+        
+        casesDelivered = QLabel("Cases Delivered")
+        piecesDelivered = QLabel("Pieces Delivered")
+        casesDelivered.setFont(fontTable)
+        piecesDelivered.setFont(fontTable)
+        self.casesDeliveredInput = QDoubleSpinBox()
+        self.casesDeliveredInput.setDecimals(0)
+        self.piecesDeliveredInput = QDoubleSpinBox()
+        self.piecesDeliveredInput.setDecimals(0)
+        self.loadBtnDeliver = QPushButton(text="LOAD")
+        self.loadBtnDeliver.setFont(fontButton)
+        self.loadBtnDeliver.setFixedSize(64, 36)
+        self.loadBtnDeliver.clicked.connect(self.update_delivery)
+
+        deliveryChooseItemBox.addWidget(deliveryChooseItemLabel)
+        deliveryChooseItemBox.addWidget(self.delCIComboBox)
+        deliveryChooseItemBox.addWidget(casesDelivered)
+        deliveryChooseItemBox.addWidget(self.casesDeliveredInput)
+        deliveryChooseItemBox.addWidget(piecesDelivered)
+        deliveryChooseItemBox.addWidget(self.piecesDeliveredInput)
+        deliveryChooseItemBox.addWidget(self.loadBtnDeliver)
+        deliveryChooseItemBox.addStretch(1)
+        deliveryChooseItemBox.setSpacing(25)
+
+        self.inventoryVBLayout.addWidget(inventoryTitle)
+        self.inventoryVBLayout.addWidget(self.scrollInventory)
+        self.inventoryVBLayout.addWidget(deliveryTitle)
+        self.inventoryVBLayout.addLayout(deliveryChooseItemBox)
         self.stacklayout.addWidget(inventoryContainer)
 
         btn_icon = qta.icon('fa5s.sun')
         btn = QPushButton(btn_icon, "Morning Load")
         btn.setFixedSize(200, 60)
         btn.setIconSize(QSize(20, 20))
-        font = QFont("Sans-serif")
-        btn.setFont(font)
+        btn.setFont(fontButton)
         btn.pressed.connect(self.activate_tab_2)
         button_layout.addWidget(btn)
         
@@ -92,7 +136,6 @@ class MainWindow(QMainWindow):
         self.morningLoadVbox = QVBoxLayout(morningLoadContainer)
         morningLoadLabel = QLabel("MORNING LOAD")
         morningLoadLabel.setFont(fontTitle)
-        fontChoose = QFont("SansSerif", 12, QFont.DemiBold)
         chooseAgentBox = QHBoxLayout()
         agentLabel = QLabel("CHOOSE AGENT")
         agentLabel.setFont(fontChoose)
@@ -105,7 +148,6 @@ class MainWindow(QMainWindow):
         chooseAgentBox.setSpacing(15)
 
         #Defining elements of Description column
-        fontNormal = QFont("SansSerif", 10)
         self.setFont(fontNormal)
         chooseItemBox = QHBoxLayout()
         chooseItemLabel = QLabel("CHOOSE ITEM")
@@ -121,7 +163,6 @@ class MainWindow(QMainWindow):
         #Defining elements of row 1
         #stocksLabel = QLabel("Stocks")
         currentItemHeader = QLabel("Description")
-        fontTable = QFont("SansSerif", 12, QFont.Medium)
         
         stocksCaseLabel = QLabel("Case")
         stocksPieceLabel = QLabel("Piece")
@@ -160,7 +201,6 @@ class MainWindow(QMainWindow):
         else:
             self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
 
-        fontButton = QFont("SansSerif", 10)
         loadBox = QHBoxLayout()
         self.loadBtn = QPushButton(text="LOAD")
         self.loadBtn.setFont(fontButton)
@@ -225,8 +265,7 @@ class MainWindow(QMainWindow):
         btn_icon = qta.icon('fa5s.moon')
         btn = QPushButton(btn_icon, "Backload")
         btn.setIconSize(QSize(20, 20))
-        font = QFont("Sans-serif")
-        btn.setFont(font)
+        btn.setFont(fontButton)
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_3)
         button_layout.addWidget(btn)
@@ -309,8 +348,7 @@ class MainWindow(QMainWindow):
         btn_icon = qta.icon('fa5s.clock')
         btn = QPushButton(btn_icon, "Morning Load History")
         btn.setIconSize(QSize(20, 20))
-        font = QFont("Sans-serif")
-        btn.setFont(font)
+        btn.setFont(fontButton)
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_4)
         button_layout.addWidget(btn)
@@ -338,7 +376,6 @@ class MainWindow(QMainWindow):
             descriptionLabel = QLabel(row[1])
             caseLabel = QLabel(str(row[2]))
             pieceLabel = QLabel(str(row[3]))
-            
             font = QFont("SansSerif", 10, QFont.Normal)
             agentLabel.setFont(font)
             caseLabel.setFont(font)
@@ -363,8 +400,7 @@ class MainWindow(QMainWindow):
         btn_icon = qta.icon('fa5s.clock')
         btn = QPushButton(btn_icon, "Backload History")
         btn.setIconSize(QSize(20, 20))
-        font = QFont("Sans-serif")
-        btn.setFont(font)
+        btn.setFont(fontButton)
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_5)
         button_layout.addWidget(btn)
@@ -393,7 +429,6 @@ class MainWindow(QMainWindow):
             descriptionLabel = QLabel(row[1])
             caseLabel = QLabel(str(row[2]))
             pieceLabel = QLabel(str(row[3]))
-            
             font = QFont("SansSerif", 10, QFont.Normal)
             agentLabel.setFont(font)
             caseLabel.setFont(font)
@@ -404,8 +439,6 @@ class MainWindow(QMainWindow):
             self.bLHistoryGrid.addWidget(caseLabel, self.returnIndex, 2)
             self.bLHistoryGrid.addWidget(pieceLabel, self.returnIndex, 3)
             self.returnIndex += 1
-
-
 
         bLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         bLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -467,6 +500,9 @@ class MainWindow(QMainWindow):
             self.pieceInputBL.setMaximum(int(self.stocksPPCCurrentBL.text()) - 1)
         #else:
         #    self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
+
+    def del_index_changed(self, index):
+        return
 
     def update_stocks(self):
         stocksCaseValue = int(self.stocksCaseCurrent.text())
@@ -585,6 +621,36 @@ class MainWindow(QMainWindow):
         #set values back to 0 after loading
         self.caseInputBL.setValue(0)
         self.pieceInputBL.setValue(0)
+
+    def update_delivery(self):
+        index = self.delCIComboBox.currentIndex()
+        caseInput = self.casesDeliveredInput.value()
+        pieceInput = self.piecesDeliveredInput.value()
+        ir.update_delivery(df_initial_stocks, index, caseInput, pieceInput)
+        
+
+        #render new table
+        self.NewInventoryTableContainer = QWidget()
+        self.InventoryTable = QGridLayout(self.NewInventoryTableContainer)
+        self.columnTitles = ["Description", "Stocks (Case)", "Stocks (Piece)", "Piece per case", "Delivery (Case)", "Delivery (Piece)", "TOTAL (Case)", "TOTAL (Piece)"]
+        for t in range(len(self.columnTitles)):
+            title = QLabel(self.columnTitles[t])
+            font = QFont("SansSerif", 10, QFont.Medium)
+            title.setFont(font)
+            self.inventoryTable.addWidget(title, 1, t)
+
+        for i in range(2, len(stocksCaseValues)+ 2):
+            self.inventoryTable.addWidget(QLabel(df_initial_stocks['Description'][i-2]), i, 0)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Case)'][i-2])), i, 1)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Piece)'][i-2])), i, 2)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Piece per case'][i-2])), i, 3)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Case)'][i-2])), i, 4)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Piece)'][i-2])), i, 5)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Case)'][i-2])), i, 6)
+            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Piece)'][i-2])), i, 7)
+
+        self.inventoryVBLayout.replaceWidget(self.inventoryTableContainer, self.NewInventoryTableContainer)
+
 
     def agent_changed(self, name):
         self.caseInputLabel.setText("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")

@@ -31,9 +31,15 @@ def update_history_bl(history, sheet):
     df.to_excel("historybl.xlsx", sheet_name=sheet, index=False)
     print("History Updated")
 
+def update_delivery(df_initial, index, newcase, newpiece):
+    df_initial.at[index, "Delivery (Case)"] = newcase
+    df_initial.at[index, "Delivery (Piece)"] = newpiece
+    df_initial.to_excel("initial_stocks.xlsx", sheet_name="Inventory", index=False)
+    print("Dataframe updated")
 
-df_current_stocks = pd.read_excel("current_stocks.xlsx")
-description_list = get_all_description(df_current_stocks)
+
+#df_current_stocks = pd.read_excel("current_stocks.xlsx")
+#description_list = get_all_description(df_current_stocks)
 
 #DESCRIPTION
 def create_description_df(description_list):
