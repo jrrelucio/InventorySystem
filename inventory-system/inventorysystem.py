@@ -1,11 +1,10 @@
 import sys
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QDoubleSpinBox, QFileDialog, QLineEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedLayout, QScrollArea, QLabel, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QDoubleSpinBox, QFileDialog, QMessageBox
 from PyQt6.QtGui import QPalette, QColor, QPixmap, QFont
 import qtawesome as qta
 import pandas as pd
 import inventoryread as ir
-from pathlib import Path
 from datetime import date
 
 #initializing dataframes
@@ -13,11 +12,12 @@ df = pd.read_excel("current_stocks.xlsx")
 df_initial_stocks = pd.read_excel("initial_stocks.xlsx")
 df_history_ML = pd.read_excel('historyml.xlsx')
 df_history_BL = pd.read_excel('historybl.xlsx')
+df_agents = pd.read_excel("agents.xlsx")
 stocksCaseValues = [str(x) for x in ir.get_all_case_values(df)]
 stocksPieceValues = [str(x) for x in ir.get_all_piece_values(df)]
 stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
 stocksDescription = ir.get_all_description(df)
-agentNames = ["NOEL", "OMAR", "RIGOR", "ENRICO", "ARNEL", "VICK", "MANNY", "ROMEL", "ELDIE", "JEROME", "DENNIS", "JERALD", "JOMAR", "MELVIN"]
+agentNames = list(df_agents['Agents'])
 mLHistoryList = df_history_ML.values.tolist()
 bLHistoryList = df_history_BL.values.tolist()
 
@@ -28,10 +28,12 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Warehouse Inventory")
-        self.setFixedSize(QSize(700, 400))
+        #self.setFixedSize(QSize(700, 400))
     
-        pagelayout = QHBoxLayout()
-        button_layout = QVBoxLayout()
+        pagelayout = QVBoxLayout()
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(25, 25, 25, 25)
+        button_layout.addStretch(1)
         self.stacklayout = QStackedLayout()
 
         pagelayout.addLayout(button_layout)
@@ -48,8 +50,9 @@ class MainWindow(QMainWindow):
         #START OF INVENTORY WINDOW
         inventoryContainer = QWidget()
         inventoryVBLayout = QVBoxLayout(inventoryContainer)
+        inventoryVBLayout.setContentsMargins(50, 50, 50, 50)
         inventoryTitle = QLabel("INVENTORY")
-        fontTitle = QFont("SansSerif", 15, QFont.Bold)
+        fontTitle = QFont("SansSerif", 18, QFont.Bold)
         inventoryTitle.setFont(fontTitle)
         #self.inventoryTableContainer = QWidget()
         self.inventoryTableContainer = QWidget()
@@ -89,17 +92,21 @@ class MainWindow(QMainWindow):
         self.morningLoadVbox = QVBoxLayout(morningLoadContainer)
         morningLoadLabel = QLabel("MORNING LOAD")
         morningLoadLabel.setFont(fontTitle)
-        fontChoose = QFont("SansSerif", 10, QFont.DemiBold)
+        fontChoose = QFont("SansSerif", 12, QFont.DemiBold)
         chooseAgentBox = QHBoxLayout()
         agentLabel = QLabel("CHOOSE AGENT")
         agentLabel.setFont(fontChoose)
         self.agentComboBox = QComboBox()
         self.agentComboBox.addItems(agentNames)
         self.agentComboBox.currentTextChanged.connect( self.agent_changed )
+        self.agentComboBox.setMaximumWidth(200)
         chooseAgentBox.addWidget(agentLabel)
         chooseAgentBox.addWidget(self.agentComboBox)
+        chooseAgentBox.setSpacing(15)
 
         #Defining elements of Description column
+        fontNormal = QFont("SansSerif", 10)
+        self.setFont(fontNormal)
         chooseItemBox = QHBoxLayout()
         chooseItemLabel = QLabel("CHOOSE ITEM")
         chooseItemLabel.setFont(fontChoose)
@@ -107,78 +114,78 @@ class MainWindow(QMainWindow):
         self.descriptionComboBox.addItems(stocksDescription)
         self.descriptionComboBox.currentIndexChanged.connect( self.index_changed )
         itemIndex = self.descriptionComboBox.currentIndex()
-        #self.descriptionComboBox.setEditable(True)
-        self.descriptionComboBox.setInsertPolicy(QComboBox.InsertPolicy.InsertAlphabetically)
+        self.descriptionComboBox.setMaximumWidth(200)
         chooseItemBox.addWidget(chooseItemLabel)
         chooseItemBox.addWidget(self.descriptionComboBox)
         
         #Defining elements of row 1
         #stocksLabel = QLabel("Stocks")
-        currentItemHeader = QLabel("DESCRIPTION")
-        font = QFont("SansSerif", 10, QFont.Medium)
-        self.currentItemLabel = QLabel(self.descriptionComboBox.currentText())
-        stocksCaseLabel = QLabel("CASE")
-        stocksPieceLabel = QLabel("PIECE")
+        currentItemHeader = QLabel("Description")
+        fontTable = QFont("SansSerif", 12, QFont.Medium)
+        
+        stocksCaseLabel = QLabel("Case")
+        stocksPieceLabel = QLabel("Piece")
         stocksPiecePerCaseLabel = QLabel("Piece per Case")
-        currentItemHeader.setFont(font)
-        stocksCaseLabel.setFont(font)
-        stocksPieceLabel.setFont(font)
-        stocksPiecePerCaseLabel.setFont(font)
+        currentItemHeader.setFont(fontTable)
+        stocksCaseLabel.setFont(fontTable)
+        stocksPieceLabel.setFont(fontTable)
+        stocksPiecePerCaseLabel.setFont(fontTable)
 
         #Adding elements to row 2 of stocks
-        
-        self.descriptonCurrent = QLabel()
+        self.currentItemLabel = QLabel(self.descriptionComboBox.currentText())
+        self.currentItemLabel.setFont(fontNormal)  
         self.stocksCaseCurrent = QLabel(stocksCaseValues[itemIndex])
+        self.stocksCaseCurrent.setFont(fontNormal)
         self.stocksPieceCurrent = QLabel(stocksPieceValues[itemIndex])
+        self.stocksPieceCurrent.setFont(fontNormal)
         self.stocksPiecePerCaseCurrent = QLabel(stocksPiecePerCase[itemIndex])
+        self.stocksPiecePerCaseCurrent.setFont(fontNormal)
         #ROW 3: Morning Load
         #morningloadAgent = QComboBox()
         #morningloadAgent.addItems(["NOEL", "OMAR"])
         #morningloadAgent.setEditable(True)
         self.caseInput = QDoubleSpinBox()
         self.caseInput.setDecimals(0)
+        self.caseInput.setMaximumWidth(200)
         
         self.pieceInput = QDoubleSpinBox()
         self.pieceInput.setDecimals(0)
+        self.pieceInput.setMaximumWidth(200)
 
         #setting maximum values of doublespinbox
         self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
+        self.caseInput.setMinimum(0)
         if int(self.stocksCaseCurrent.text()) > 0:
             self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()) - 1)
         else:
             self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
 
-
+        fontButton = QFont("SansSerif", 10)
+        loadBox = QHBoxLayout()
         self.loadBtn = QPushButton(text="LOAD")
+        self.loadBtn.setFont(fontButton)
+        self.loadBtn.setFixedSize(64, 36)
         self.loadBtn.clicked.connect(self.update_stocks)
-
-        #Row 4, Claimed Items
-        #Row 5, Description, Case 
-        claimedAgentLabel = QLabel("Agent")
-        claimedCaseLabel = QLabel("Case")
-        claimedPieceLabel = QLabel("Piece")
-        claimedDescriptionLabel = QLabel("Description")
-        #add item on table after computing
+        loadBox.addStretch(1)
+        loadBox.addWidget(self.loadBtn)
 
         self.claimIndex = len(mLHistoryList)
 
         self.caseInputLabel = QLabel("How many cases of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.caseInputLabel.setFont(fontNormal)
         self.pieceInputLabel = QLabel("How many piece of "+self.descriptionComboBox.currentText()+" will "+self.agentComboBox.currentText()+" claim?")
+        self.pieceInputLabel.setFont(fontNormal)
         caseInputHBox = QHBoxLayout()
         caseInputHBox.addWidget(self.caseInputLabel)
         caseInputHBox.addWidget(self.caseInput)
         pieceInputHBox = QHBoxLayout()
         pieceInputHBox.addWidget(self.pieceInputLabel)
         pieceInputHBox.addWidget(self.pieceInput)
-        self.morningLoadVbox.addWidget(morningLoadLabel)
-        self.morningLoadVbox.addLayout(chooseAgentBox)
-        
 
         #adding items to main grid
-        self.morningLoadVbox.addLayout(chooseItemBox)
         self.morningLoadLayout = QGridLayout()
+        self.morningLoadLayout.setContentsMargins(65, 0, 0, 0)
         self.morningLoadLayout.addWidget(currentItemHeader, 0, 0)
-        self.morningLoadLayout.addWidget(stocksCaseLabel, 0, 1)
         self.morningLoadLayout.addWidget(stocksCaseLabel, 0, 1)
         self.morningLoadLayout.addWidget(stocksPieceLabel, 0, 2)
         self.morningLoadLayout.addWidget(stocksPiecePerCaseLabel, 0, 3)
@@ -190,12 +197,6 @@ class MainWindow(QMainWindow):
         self.stocksPieceCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.morningLoadLayout.addWidget(self.stocksPiecePerCaseCurrent, 1, 3)
         self.stocksPiecePerCaseCurrent.setAlignment(Qt.AlignmentFlag.AlignTop)
-        #self.morningLoad.addWidget(self.agentName, 3, 0)
-
-        self.morningLoadVbox.addLayout(self.morningLoadLayout)
-        self.morningLoadVbox.addLayout(caseInputHBox)
-        self.morningLoadVbox.addLayout(pieceInputHBox)
-        self.morningLoadVbox.addWidget(self.loadBtn)
         
         #Export Summary Button
         self.exportBox = QHBoxLayout()
@@ -204,9 +205,19 @@ class MainWindow(QMainWindow):
         self.exportBtn = QPushButton("EXPORT")
         self.exportBox.addWidget(exportTitle)
         self.exportBox.addWidget(self.exportBtn)
-        self.morningLoadVbox.addLayout(self.exportBox)
         self.exportBtn.clicked.connect(self.export_function)
 
+        self.morningLoadVbox.addStretch(1)
+        self.morningLoadVbox.addWidget(morningLoadLabel)
+        self.morningLoadVbox.addLayout(chooseAgentBox)
+        self.morningLoadVbox.addLayout(chooseItemBox)
+        self.morningLoadVbox.addLayout(self.morningLoadLayout)
+        self.morningLoadVbox.addLayout(caseInputHBox)
+        self.morningLoadVbox.addLayout(pieceInputHBox)
+        self.morningLoadVbox.addLayout(loadBox)
+        self.morningLoadVbox.addStretch(1)
+        self.morningLoadVbox.setSpacing(15)
+        self.morningLoadVbox.setContentsMargins(50, 50, 50, 50)
         self.stacklayout.addWidget(morningLoadContainer)
 
         ###END OF MORNING LOAD WINDOW
@@ -243,9 +254,11 @@ class MainWindow(QMainWindow):
         chooseItemBoxBL.addWidget(self.chooseItemComboBoxBL)
         #backloadGrid Section
         backloadGrid = QGridLayout()
-        columnTitles = ["DESCRIPTION", "CASE", "PIECE", "PIECE PER CASE"]
+        columnTitles = ["Description", "Case", "Piece", "Piece per case"]
         for i in range(len(columnTitles)):
-            backloadGrid.addWidget(QLabel(columnTitles[i]), 0, i)
+            title = QLabel(columnTitles[i])
+            title.setFont(fontTable)
+            backloadGrid.addWidget(title, 0, i)
         self.currentItemBL = QLabel(self.chooseItemComboBoxBL.currentText())
         self.currentItemBL.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.stocksCaseCurrentBL = QLabel(stocksCaseValues[self.chooseItemComboBoxBL.currentIndex()])
@@ -281,8 +294,7 @@ class MainWindow(QMainWindow):
         self.loadBtnBL = QPushButton(text="LOAD")
         self.loadBtnBL.clicked.connect(self.update_stocks_BL)
         self.returnIndex = len(bLHistoryList)
-        font = QFont("SansSerif")
-        self.loadBtnBL.setFont(font)
+        self.loadBtnBL.setFont(fontButton)
 
 
         backloadLayout.addWidget(backloadTitle)
@@ -306,6 +318,7 @@ class MainWindow(QMainWindow):
         #morning load history window
         mLHistoryContainer = QWidget()
         mLHistoryLayout = QVBoxLayout(mLHistoryContainer)
+        mLHistoryLayout.setContentsMargins(50, 50, 50, 50)
         self.columnTitles = ["Agent", "Description", "Case", "Piece"]
         mLHistoryLabel = QLabel("MORNING LOAD HISTORY")
         mLHistoryLabel.setFont(fontTitle)
@@ -330,16 +343,17 @@ class MainWindow(QMainWindow):
             agentLabel.setFont(font)
             caseLabel.setFont(font)
             pieceLabel.setFont(font)
-            descriptionLabel.setFont(font)
+            descriptionLabel.setFont(font) 
             self.mLHistoryGrid.addWidget(agentLabel, self.claimIndex, 0)
             self.mLHistoryGrid.addWidget(descriptionLabel, self.claimIndex, 1)
             self.mLHistoryGrid.addWidget(caseLabel, self.claimIndex, 2)
             self.mLHistoryGrid.addWidget(pieceLabel, self.claimIndex, 3)
             self.claimIndex += 1
-
+        
         mLHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         mLHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         mLHistoryGridScroll.setWidgetResizable(True)
+        
         mLHistoryGridScroll.setWidget(mLHistoryGridContainer)
 
         mLHistoryLayout.addWidget(mLHistoryGridScroll)
@@ -354,9 +368,12 @@ class MainWindow(QMainWindow):
         btn.setFixedSize(200, 60)
         btn.pressed.connect(self.activate_tab_5)
         button_layout.addWidget(btn)
+        button_layout.addStretch(1)
+        button_layout.setSpacing(25)
         #backload history window
         bLHistoryContainer = QWidget()
         bLHistoryLayout = QVBoxLayout(bLHistoryContainer)
+        bLHistoryLayout.setContentsMargins(50, 50, 50, 50)
         self.columnTitles = ["Agent", "Description", "Case", "Piece"]
         bLHistoryLabel = QLabel("BACKLOAD HISTORY")
         bLHistoryLabel.setFont(fontTitle)
@@ -396,9 +413,9 @@ class MainWindow(QMainWindow):
         bLHistoryGridScroll.setWidget(bLHistoryGridContainer)
 
         bLHistoryLayout.addWidget(bLHistoryGridScroll)
+        bLHistoryLayout.addLayout(self.exportBox)
         self.stacklayout.addWidget(bLHistoryContainer)
 
-        #scroll = QScrollArea()
         widget = QWidget()
         widget.setLayout(pagelayout)
         self.setGeometry(600, 100, 700, 400)
@@ -459,7 +476,17 @@ class MainWindow(QMainWindow):
         piecePerCaseValue = int(self.stocksPiecePerCaseCurrent.text())
         if (stocksPieceValue - inputPieceValue) < 0:
             stocksPieceValue = int(piecePerCaseValue) + (stocksPieceValue - inputPieceValue)
-            stocksCaseValue -= 1
+            if  (stocksCaseValue - inputCaseValue - 1) > 0:
+                print((stocksCaseValue - 1) + (stocksCaseValue - inputCaseValue))
+                stocksCaseValue -= 1
+            else:
+                dlg = QMessageBox(self)
+                dlg.setWindowTitle('Error!')
+                dlg.setText("Invalid Input!")
+                dlg.setStandardButtons(QMessageBox.StandardButton.Close)
+                dlg.setIcon(QMessageBox.Icon.Warning)
+                button = dlg.exec()
+                return
         else:
             stocksPieceValue = stocksPieceValue - inputPieceValue
         stocksCaseValue -= inputCaseValue
@@ -588,12 +615,12 @@ class MainWindow(QMainWindow):
         savedLabel = QLabel("FILE SAVED SUCCESSFULLY")
         self.exportBox.addWidget(savedLabel)
 
-        #rewrite all dataframes
-        mLHistoryList = []
-        bLHistoryList = []
-        ir.update_history_ml(mLHistoryList, "Morning Load")
-        ir.update_history_bl(bLHistoryList, "Backload")
-        ir.copy_current_to_initial(df)
+        #save dataframes
+        #mLHistoryList = []
+        #bLHistoryList = []
+        #ir.update_history_ml(mLHistoryList, "Morning Load")
+        #ir.update_history_bl(bLHistoryList, "Backload")
+        #ir.copy_current_to_initial(df)
         #empty out morning load history
         #empty out backload history
         #initial stocks = current stocks
