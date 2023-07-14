@@ -10,6 +10,7 @@ from datetime import date
 #initializing dataframes
 df = pd.read_excel("current_stocks.xlsx")
 df_initial_stocks = pd.read_excel("initial_stocks.xlsx")
+df_history_del = pd.read_excel('historydel.xlsx')
 df_history_ML = pd.read_excel('historyml.xlsx')
 df_history_BL = pd.read_excel('historybl.xlsx')
 df_agents = pd.read_excel("agents.xlsx")
@@ -18,6 +19,7 @@ stocksPieceValues = [str(x) for x in ir.get_all_piece_values(df)]
 stocksPiecePerCase = [str(x) for x in  ir.get_all_ppc_values(df)]
 stocksDescription = ir.get_all_description(df)
 agentNames = list(df_agents['Agents'])
+delHistoryList = df_history_del.values.tolist()
 mLHistoryList = df_history_ML.values.tolist()
 bLHistoryList = df_history_BL.values.tolist()
 
@@ -83,52 +85,176 @@ class MainWindow(QMainWindow):
             self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Case)'][i-2])), i, 6)
             self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Piece)'][i-2])), i, 7)
 
-        #Delivery Section
-        deliveryTitle = QLabel("DELIVERY")
-        deliveryTitle.setFont(fontTitle)
-        deliveryChooseItemBox = QHBoxLayout()
-        deliveryChooseItemLabel = QLabel("Choose Item")
-        deliveryChooseItemLabel.setFont(fontTable)
-        self.delCIComboBox = QComboBox()
-        self.delCIComboBox.addItems(stocksDescription)
-        self.delCIComboBox.currentTextChanged.connect( self.del_index_changed )
-        self.delCIComboBox.setMaximumWidth(200)
+        btn_icon = qta.icon('fa5s.truck')
+        btn = QPushButton(btn_icon, "Delivery")
+        btn.setIconSize(QSize(20, 20))
+        btn.setFont(fontButton)
+        btn.setFixedSize(200, 60)
+        btn.pressed.connect(self.activate_tab_2)
+        button_layout.addWidget(btn)
+
+        ###START OF DELIVERY WINDOW
+        deliveryContainer = QWidget()
+        self.deliveryVbox = QVBoxLayout(deliveryContainer)
+        deliveryLabel = QLabel("DELIVERY")
+        deliveryLabel.setFont(fontTitle)
+        deliveryChooseAgentBox = QHBoxLayout()
+        deliveryAgentLabel = QLabel("CHOOSE AGENT")
+        deliveryAgentLabel.setFont(fontChoose)
+        deliveryChooseAgentBox.addWidget(deliveryAgentLabel)
+        deliveryChooseAgentBox.setSpacing(15)
+
+        #Defining elements of Description column
+        self.setFont(fontNormal)
+        chooseItemBoxDel = QHBoxLayout()
+        chooseItemLabelDel = QLabel("CHOOSE ITEM")
+        chooseItemLabelDel.setFont(fontChoose)
+        self.chooseItemComboBoxDel = QComboBox()
+        self.chooseItemComboBoxDel.addItems(stocksDescription)
+        self.chooseItemComboBoxDel.currentIndexChanged.connect( self.index_changed_del )
+        itemIndex = self.chooseItemComboBoxDel.currentIndex()
+        self.chooseItemComboBoxDel.setMaximumWidth(200)
+        chooseItemBoxDel.addWidget(chooseItemLabelDel)
+        chooseItemBoxDel.addWidget(self.chooseItemComboBoxDel)
         
-        casesDelivered = QLabel("Cases Delivered")
-        piecesDelivered = QLabel("Pieces Delivered")
-        casesDelivered.setFont(fontTable)
-        piecesDelivered.setFont(fontTable)
-        self.casesDeliveredInput = QDoubleSpinBox()
-        self.casesDeliveredInput.setDecimals(0)
-        self.piecesDeliveredInput = QDoubleSpinBox()
-        self.piecesDeliveredInput.setDecimals(0)
-        self.loadBtnDeliver = QPushButton(text="LOAD")
-        self.loadBtnDeliver.setFont(fontButton)
-        self.loadBtnDeliver.setFixedSize(64, 36)
-        self.loadBtnDeliver.clicked.connect(self.update_delivery)
+        #Defining elements of row 1
+        #stocksLabel = QLabel("Stocks")
+        currentItemHeaderDel = QLabel("Description")
+        
+        stocksCaseLabelDel = QLabel("Case")
+        stocksPieceLabelDel = QLabel("Piece")
+        stocksPiecePerCaseLabelDel = QLabel("Piece per Case")
+        currentItemHeaderDel.setFont(fontTable)
+        stocksCaseLabelDel.setFont(fontTable)
+        stocksPieceLabelDel.setFont(fontTable)
+        stocksPiecePerCaseLabelDel.setFont(fontTable)
 
-        deliveryChooseItemBox.addWidget(deliveryChooseItemLabel)
-        deliveryChooseItemBox.addWidget(self.delCIComboBox)
-        deliveryChooseItemBox.addWidget(casesDelivered)
-        deliveryChooseItemBox.addWidget(self.casesDeliveredInput)
-        deliveryChooseItemBox.addWidget(piecesDelivered)
-        deliveryChooseItemBox.addWidget(self.piecesDeliveredInput)
-        deliveryChooseItemBox.addWidget(self.loadBtnDeliver)
-        deliveryChooseItemBox.addStretch(1)
-        deliveryChooseItemBox.setSpacing(25)
+        #Adding elements to row 2 of stocks
+        self.currentItemLabelDel = QLabel(self.chooseItemComboBoxDel.currentText())
+        self.currentItemLabelDel.setFont(fontNormal)  
+        self.stocksCaseCurrentDel = QLabel(stocksCaseValues[itemIndex])
+        self.stocksCaseCurrentDel.setFont(fontNormal)
+        self.stocksPieceCurrentDel = QLabel(stocksPieceValues[itemIndex])
+        self.stocksPieceCurrentDel.setFont(fontNormal)
+        self.stocksPiecePerCaseCurrentDel = QLabel(stocksPiecePerCase[itemIndex])
+        self.stocksPiecePerCaseCurrentDel.setFont(fontNormal)
 
-        self.inventoryVBLayout.addWidget(inventoryTitle)
-        self.inventoryVBLayout.addWidget(self.scrollInventory)
-        self.inventoryVBLayout.addWidget(deliveryTitle)
-        self.inventoryVBLayout.addLayout(deliveryChooseItemBox)
-        self.stacklayout.addWidget(inventoryContainer)
+        self.caseInputDel = QDoubleSpinBox()
+        self.caseInputDel.setDecimals(0)
+        self.caseInputDel.setMaximumWidth(200)
+        
+        self.pieceInputDel = QDoubleSpinBox()
+        self.pieceInputDel.setDecimals(0)
+        self.pieceInputDel.setMaximumWidth(200)
+
+        #setting maximum values of doublespinbox
+        self.caseInputDel.setMaximum(int(self.stocksCaseCurrentDel.text()))
+        self.caseInputDel.setMinimum(0)
+        if int(self.stocksCaseCurrentDel.text()) > 0:
+            self.pieceInputDel.setMaximum(int(self.stocksPiecePerCaseCurrentDel.text()) - 1)
+        else:
+            self.pieceInputDel.setMaximum(int(self.stocksPieceCurrentDel.text()))
+
+        loadBoxDel = QHBoxLayout()
+        self.loadBtnDel = QPushButton(text="LOAD")
+        self.loadBtnDel.setFont(fontButton)
+        self.loadBtnDel.setFixedSize(64, 36)
+        self.loadBtnDel.clicked.connect(self.update_delivery)
+        loadBoxDel.addStretch(1)
+        loadBoxDel.addWidget(self.loadBtnDel)
+
+        self.deliveryIndex = len(delHistoryList)
+
+        self.caseInputLabelDel = QLabel("How many cases of "+self.chooseItemComboBoxDel.currentText()+" were delivered?")
+        self.caseInputLabelDel.setFont(fontNormal)
+        self.pieceInputLabelDel = QLabel("How many pieces of "+self.chooseItemComboBoxDel.currentText()+" were delivered?")
+        self.pieceInputLabelDel.setFont(fontNormal)
+
+        caseInputHBoxDel = QHBoxLayout()
+        caseInputHBoxDel.addWidget(self.caseInputLabelDel)
+        caseInputHBoxDel.addWidget(self.caseInputDel)
+        pieceInputHBoxDel = QHBoxLayout()
+        pieceInputHBoxDel.addWidget(self.pieceInputLabelDel)
+        pieceInputHBoxDel.addWidget(self.pieceInputDel)
+
+        #adding items to main grid
+        self.deliveryLayout = QGridLayout()
+        self.deliveryLayout.setContentsMargins(65, 0, 0, 0)
+        self.deliveryLayout.addWidget(currentItemHeaderDel, 0, 0)
+        self.deliveryLayout.addWidget(stocksCaseLabelDel, 0, 1)
+        self.deliveryLayout.addWidget(stocksPieceLabelDel, 0, 2)
+        self.deliveryLayout.addWidget(stocksPiecePerCaseLabelDel, 0, 3)
+        self.deliveryLayout.addWidget(self.currentItemLabelDel, 1, 0)
+        self.currentItemLabelDel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.deliveryLayout.addWidget(self.stocksCaseCurrentDel, 1, 1)
+        self.stocksCaseCurrentDel.setAlignment(Qt.AlignmentFlag.AlignTop)  
+        self.deliveryLayout.addWidget(self.stocksPieceCurrentDel, 1, 2)
+        self.stocksPieceCurrentDel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.deliveryLayout.addWidget(self.stocksPiecePerCaseCurrentDel, 1, 3)
+        self.stocksPiecePerCaseCurrentDel.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.deliveryVbox.addStretch(1)
+        self.deliveryVbox.addWidget(deliveryLabel)
+        self.deliveryVbox.addLayout(chooseItemBoxDel)
+        self.deliveryVbox.addLayout(self.deliveryLayout)
+        self.deliveryVbox.addLayout(caseInputHBoxDel)
+        self.deliveryVbox.addLayout(pieceInputHBoxDel)
+        self.deliveryVbox.addLayout(loadBoxDel)
+        self.deliveryVbox.setSpacing(15)
+        self.deliveryVbox.setContentsMargins(25, 0, 25, 0)
+        self.stacklayout.addWidget(deliveryContainer)
+
+        #delivery history window
+        delHistoryContainer = QWidget()
+        delHistoryLayout = QVBoxLayout(delHistoryContainer)
+        delHistoryLayout.setContentsMargins(0, 0, 0, 0)
+        self.columnTitles = ["Agent", "Description", "Case", "Piece"]
+        delHistoryLabel = QLabel("DELIVERY HISTORY")
+        delHistoryLabel.setFont(fontTitle)
+        delHistoryLayout.addWidget(delHistoryLabel)
+        delHistoryGridScroll = QScrollArea()
+        delHistoryGridContainer = QWidget()
+        self.delHistoryGrid = QGridLayout(delHistoryGridContainer)
+        for t in range(len(self.columnTitles)):
+            font = QFont("SansSerif", 10, QFont.Medium)
+            titleLabel = QLabel(self.columnTitles[t])
+            titleLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            titleLabel.setFont(font)
+            self.delHistoryGrid.addWidget(titleLabel, 0, t)
+
+        for row in delHistoryList:
+            agentLabelDel = QLabel(row[0])
+            descriptionLabelDel = QLabel(row[1])
+            caseLabelDel = QLabel(str(row[2]))
+            pieceLabelDel = QLabel(str(row[3]))
+            font = QFont("SansSerif", 10, QFont.Normal)
+            agentLabelDel.setFont(font)
+            caseLabelDel.setFont(font)
+            pieceLabelDel.setFont(font)
+            descriptionLabelDel.setFont(font) 
+            self.delHistoryGrid.addWidget(agentLabelDel, self.deliveryIndex, 0)
+            self.delHistoryGrid.addWidget(descriptionLabel, self.deliveryIndex, 1)
+            self.delHistoryGrid.addWidget(caseLabelDel, self.deliveryIndex, 2)
+            self.delHistoryGrid.addWidget(pieceLabelDel, self.deliveryIndex, 3)
+            self.deliveryIndex += 1
+        
+        delHistoryGridScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        delHistoryGridScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        delHistoryGridScroll.setWidgetResizable(True)
+        
+        delHistoryGridScroll.setWidget(delHistoryGridContainer)
+
+        delHistoryLayout.addWidget(delHistoryGridScroll)
+        #self.stacklayout.addWidget(mLHistoryContainer)
+        self.deliveryVbox.addWidget(delHistoryContainer)
+        self.deliveryVbox.addStretch(1)
 
         btn_icon = qta.icon('fa5s.sun')
         btn = QPushButton(btn_icon, "Morning Load")
         btn.setFixedSize(200, 60)
         btn.setIconSize(QSize(20, 20))
         btn.setFont(fontButton)
-        btn.pressed.connect(self.activate_tab_2)
+        btn.pressed.connect(self.activate_tab_3)
         button_layout.addWidget(btn)
         
         ###START OF MORNING LOAD WINDOW
@@ -266,7 +392,7 @@ class MainWindow(QMainWindow):
         btn.setIconSize(QSize(20, 20))
         btn.setFont(fontButton)
         btn.setFixedSize(200, 60)
-        btn.pressed.connect(self.activate_tab_3)
+        btn.pressed.connect(self.activate_tab_4)
         button_layout.addWidget(btn)
         #START OF BACKLOAD WINDOW
         backloadContainer = QWidget()
@@ -344,14 +470,6 @@ class MainWindow(QMainWindow):
         backloadLayout.addWidget(self.loadBtnBL)
         self.stacklayout.addWidget(backloadContainer)
 
-        btn_icon = qta.icon('fa5s.clock')
-        btn = QPushButton(btn_icon, "Morning Load History")
-        btn.setIconSize(QSize(20, 20))
-        btn.setFont(fontButton)
-        btn.setFixedSize(200, 60)
-        btn.pressed.connect(self.activate_tab_4)
-        button_layout.addWidget(btn)
-
         #morning load history window
         mLHistoryContainer = QWidget()
         mLHistoryLayout = QVBoxLayout(mLHistoryContainer)
@@ -399,8 +517,8 @@ class MainWindow(QMainWindow):
 
 
 
-        btn_icon = qta.icon('fa5s.clock')
-        btn = QPushButton(btn_icon, "Backload History")
+        btn_icon = qta.icon('fa5s.save')
+        btn = QPushButton(btn_icon, "SAVE CHANGES")
         btn.setIconSize(QSize(20, 20))
         btn.setFont(fontButton)
         btn.setFixedSize(200, 60)
@@ -456,6 +574,15 @@ class MainWindow(QMainWindow):
         self.setGeometry(600, 100, 700, 400)
         self.setCentralWidget(widget)
 
+        #Export Summary Button
+        self.exportBox = QHBoxLayout()
+        exportTitle = QLabel("GENERATE DAILY REPORT")
+        exportTitle.setFont(fontChoose)
+        self.exportBtn = QPushButton("EXPORT")
+        self.exportBox.addWidget(exportTitle)
+        self.exportBox.addWidget(self.exportBtn)
+        self.exportBtn.clicked.connect(self.export_function)
+
 
 
     def activate_tab_1(self):
@@ -503,7 +630,20 @@ class MainWindow(QMainWindow):
         #else:
         #    self.pieceInputBL.setMaximum(int(self.stocksPieceCurrentBL.text()))
 
-    def del_index_changed(self, index):
+    def index_changed_del(self, index):
+        self.caseInputLabelDel.setText("How many cases of "+self.chooseItemComboBoxDel.currentText()+" will be delivered?")
+        self.pieceInputLabelDel.setText("How many pieces of "+self.chooseItemComboBoxDel.currentText()+" will be delivered?")
+        self.currentItemLabelDel.setText(self.descriptionComboBox.currentText())
+        self.stocksCaseCurrentDel.setText(stocksCaseValues[index])
+        self.stocksPieceCurrentDel.setText(stocksPieceValues[index])
+        self.stocksPiecePerCaseCurrentDel.setText(stocksPiecePerCase[index])
+
+        #setting maximum values of doublespinbox
+        self.caseInput.setMaximum(int(self.stocksCaseCurrent.text()))
+        if int(self.stocksCaseCurrent.text()) > 0:
+            self.pieceInput.setMaximum(int(self.stocksPiecePerCaseCurrent.text()) - 1)
+        else:
+            self.pieceInput.setMaximum(int(self.stocksPieceCurrent.text()))
         return
 
     def update_stocks(self):
@@ -629,28 +769,6 @@ class MainWindow(QMainWindow):
         caseInput = self.casesDeliveredInput.value()
         pieceInput = self.piecesDeliveredInput.value()
         ir.update_delivery(df_initial_stocks, index, caseInput, pieceInput)
-        
-        #render new table
-        self.NewInventoryTableContainer = QWidget()
-        self.InventoryTable = QGridLayout(self.NewInventoryTableContainer)
-        self.columnTitles = ["Description", "Stocks (Case)", "Stocks (Piece)", "Piece per case", "Delivery (Case)", "Delivery (Piece)", "TOTAL (Case)", "TOTAL (Piece)"]
-        for t in range(len(self.columnTitles)):
-            title = QLabel(self.columnTitles[t])
-            font = QFont("SansSerif", 10, QFont.Medium)
-            title.setFont(font)
-            self.inventoryTable.addWidget(title, 1, t)
-
-        for i in range(2, len(stocksCaseValues)+ 2):
-            self.inventoryTable.addWidget(QLabel(df_initial_stocks['Description'][i-2]), i, 0)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Case)'][i-2])), i, 1)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Stocks (Piece)'][i-2])), i, 2)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Piece per case'][i-2])), i, 3)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Case)'][i-2])), i, 4)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['Delivery (Piece)'][i-2])), i, 5)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Case)'][i-2])), i, 6)
-            self.inventoryTable.addWidget(QLabel(str(df_initial_stocks['TOTAL (Piece)'][i-2])), i, 7)
-
-        self.inventoryVBLayout.replaceWidget(self.inventoryTableContainer, self.NewInventoryTableContainer)
 
 
     def agent_changed(self, name):
