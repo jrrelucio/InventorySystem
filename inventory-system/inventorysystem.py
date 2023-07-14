@@ -255,9 +255,8 @@ class MainWindow(QMainWindow):
         self.morningLoadVbox.addLayout(caseInputHBox)
         self.morningLoadVbox.addLayout(pieceInputHBox)
         self.morningLoadVbox.addLayout(loadBox)
-        self.morningLoadVbox.addStretch(1)
         self.morningLoadVbox.setSpacing(15)
-        self.morningLoadVbox.setContentsMargins(50, 50, 50, 50)
+        self.morningLoadVbox.setContentsMargins(25, 0, 25, 0)
         self.stacklayout.addWidget(morningLoadContainer)
 
         ###END OF MORNING LOAD WINDOW
@@ -356,7 +355,7 @@ class MainWindow(QMainWindow):
         #morning load history window
         mLHistoryContainer = QWidget()
         mLHistoryLayout = QVBoxLayout(mLHistoryContainer)
-        mLHistoryLayout.setContentsMargins(50, 50, 50, 50)
+        mLHistoryLayout.setContentsMargins(0, 0, 0, 0)
         self.columnTitles = ["Agent", "Description", "Case", "Piece"]
         mLHistoryLabel = QLabel("MORNING LOAD HISTORY")
         mLHistoryLabel.setFont(fontTitle)
@@ -394,7 +393,10 @@ class MainWindow(QMainWindow):
         mLHistoryGridScroll.setWidget(mLHistoryGridContainer)
 
         mLHistoryLayout.addWidget(mLHistoryGridScroll)
-        self.stacklayout.addWidget(mLHistoryContainer)
+        #self.stacklayout.addWidget(mLHistoryContainer)
+        self.morningLoadVbox.addWidget(mLHistoryContainer)
+        self.morningLoadVbox.addStretch(1)
+
 
 
         btn_icon = qta.icon('fa5s.clock')
@@ -628,7 +630,6 @@ class MainWindow(QMainWindow):
         pieceInput = self.piecesDeliveredInput.value()
         ir.update_delivery(df_initial_stocks, index, caseInput, pieceInput)
         
-
         #render new table
         self.NewInventoryTableContainer = QWidget()
         self.InventoryTable = QGridLayout(self.NewInventoryTableContainer)
